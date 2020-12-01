@@ -11,4 +11,4 @@ main = do
   args <- getArgs
   case args of
     [arg] -> (solve . read $ arg) >>= C.putStr
-    _ -> hPutStrLn stderr $ "Usage: advent2020-exe problem-number"
+    _ -> hPutStrLn stderr "Usage: advent2020-exe problem-number"
