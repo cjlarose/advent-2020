@@ -7,6 +7,7 @@ import Text.Parsec.Char (endOfLine, digit)
 import Text.Parsec.ByteString (Parser)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
+import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
 entry :: Parser Int
 entry = read <$> many1 digit
@@ -35,11 +36,11 @@ productOfSpecialTriple entries = x * y * z
   where
     (x, y, z) = head . filter (\(a, b, c) -> a + b + c == 2020) . triples $ entries
 
-printResults :: [Int] -> (String, String)
-printResults entries = (part1, part2)
+printResults :: [Int] -> PuzzleAnswerPair
+printResults entries = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . productOfSpecialPair $ entries
     part2 = show . productOfSpecialTriple $ entries
 
-solve :: IO (Either String (String, String))
+solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse expenseReport printResults <$> getProblemInputAsByteString 1
