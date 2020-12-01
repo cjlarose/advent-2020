@@ -23,6 +23,9 @@ dependencies:
 - base >= 4.7 && < 5
 - binary
 - bytestring
+- filepath
+- tasty
+- tasty-golden
 
 library:
   source-dirs: src

@@ -10,6 +10,12 @@ To run the solution for Day 1, execute
 stack run 1
 ```
 
+## Run all tests
+
+```sh
+stack test
+```
+
 ## Download problem input
 
 Set the env var `ADVENT_SESSION_COOKIE` to your cookie for `adventofcode.com`. Then execute
