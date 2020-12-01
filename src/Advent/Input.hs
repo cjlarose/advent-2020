@@ -6,6 +6,7 @@ module Advent.Input
 
 import System.IO (hPutStrLn, stderr)
 import System.Exit (exitFailure)
+import Data.Either (either)
 
 import qualified Data.ByteString as B
 import Text.Parsec (ParseError)
@@ -24,7 +25,4 @@ getProblemInputAsByteString :: Int -> IO B.ByteString
 getProblemInputAsByteString = B.readFile . path
 
 withSuccessfulParse :: Parser a -> (a -> PuzzleAnswerPair) -> B.ByteString -> Either String PuzzleAnswerPair
-withSuccessfulParse p f x = let res = Text.Parsec.parse p "" x
-  in case res of
-       Left err -> Left $ show err
-       Right parsed -> Right . f $ parsed
+withSuccessfulParse p f x = either (Left . show) (Right . f) $ Text.Parsec.parse p "" x
