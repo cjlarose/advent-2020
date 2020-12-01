@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c7b0305a46d6758f57804a101032622b38f715374beffcc276fcdef4cf845a8d
+-- hash: 04103b20d50782ca59cdfdf4d59bcafadab0da8083f3dd57fc5bb38b9bb9a061
 
 name:           advent2020
 version:        0.1.0.0
@@ -27,13 +27,16 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Advent2020.Day1
+      Advent2020.Solve
   other-modules:
       Paths_advent2020
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , binary
+    , bytestring
   default-language: Haskell2010
 
 executable advent2020-exe
@@ -46,6 +49,8 @@ executable advent2020-exe
   build-depends:
       advent2020
     , base >=4.7 && <5
+    , binary
+    , bytestring
   default-language: Haskell2010
 
 test-suite advent2020-test
@@ -59,4 +64,6 @@ test-suite advent2020-test
   build-depends:
       advent2020
     , base >=4.7 && <5
+    , binary
+    , bytestring
   default-language: Haskell2010
