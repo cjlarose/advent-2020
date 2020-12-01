@@ -24,6 +24,7 @@ dependencies:
 - binary
 - bytestring
 - filepath
+- parsec
 - tasty
 - tasty-golden
 
