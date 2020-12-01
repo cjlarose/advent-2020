@@ -1,4 +1,4 @@
-module Advent2020.Day1
+module Advent2020.Day01
   ( solve
   ) where
 

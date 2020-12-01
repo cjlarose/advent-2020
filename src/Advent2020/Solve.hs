@@ -7,10 +7,10 @@ import System.IO (hPutStrLn, stderr)
 import Data.Either (Either(..))
 import Data.Binary.Put (runPut, putCharUtf8, putStringUtf8)
 
-import qualified Advent2020.Day1
+import qualified Advent2020.Day01
 
 solver :: Int -> IO (Either String (String, String))
-solver 1 = Advent2020.Day1.solve
+solver 1 = Advent2020.Day01.solve
 solver n = pure . Left $ "Unknown problem " ++ show n
 
 solve :: Int -> IO LBS.ByteString
