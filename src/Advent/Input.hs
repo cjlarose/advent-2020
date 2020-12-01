@@ -21,12 +21,6 @@ getProblemInputAsString = readFile . path
 getProblemInputAsByteString :: Int -> IO B.ByteString
 getProblemInputAsByteString = B.readFile . path
 
-handleParseError :: ParseError -> IO ()
-handleParseError err = do
-  hPutStrLn stderr "Parse error:"
-  hPutStrLn stderr . show $ err
-  exitFailure
-
 withSuccessfulParse :: Parser a -> (a -> (String, String)) -> B.ByteString -> Either String (String, String)
 withSuccessfulParse p f x = let res = Text.Parsec.parse p "" x
   in case res of
