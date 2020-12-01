@@ -2,18 +2,9 @@ module Advent2020.Day01
   ( solve
   ) where
 
-import Text.Parsec (many1, sepEndBy1, eof)
-import Text.Parsec.Char (endOfLine, digit)
-import Text.Parsec.ByteString (Parser)
-
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-
-entry :: Parser Int
-entry = read <$> many1 digit
-
-expenseReport :: Parser [Int]
-expenseReport = sepEndBy1 entry endOfLine <* eof
+import Advent.CommonParsers (listOfNonNegativeIntegers)
 
 pairs :: [Int] -> [(Int, Int)]
 pairs [] = []
@@ -43,4 +34,4 @@ printResults entries = PuzzleAnswerPair (part1, part2)
     part2 = show . productOfSpecialTriple $ entries
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse expenseReport printResults <$> getProblemInputAsByteString 1
+solve = withSuccessfulParse listOfNonNegativeIntegers printResults <$> getProblemInputAsByteString 1
