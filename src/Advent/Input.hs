@@ -13,7 +13,7 @@ import qualified Text.Parsec (parse)
 import Text.Parsec.ByteString (Parser)
 
 path :: Int -> String
-path problemNumber = "inputs/" ++ (show problemNumber) ++ ".txt"
+path problemNumber = "inputs/" ++ show problemNumber ++ ".txt"
 
 getProblemInputAsString :: Int -> IO String
 getProblemInputAsString = readFile . path
