@@ -9,7 +9,6 @@ import System.Exit (exitFailure)
 import Data.Either (either)
 
 import qualified Data.ByteString as B
-import Text.Parsec (ParseError)
 import qualified Text.Parsec (parse)
 import Text.Parsec.ByteString (Parser)
 
