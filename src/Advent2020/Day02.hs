@@ -19,16 +19,16 @@ type PasswordLine = (PasswordPolicy, Password)
 passwordPolicy :: Parser PasswordPolicy
 passwordPolicy = PasswordPolicy <$> (nonNegativeInteger <* char '-') <*> (nonNegativeInteger <* char ' ') <*> lower
 
-checkValid :: PasswordPolicy -> Password -> Bool
-checkValid (PasswordPolicy minOccurences maxOccurences character) password = occurences <= maxOccurences && occurences >= minOccurences
-  where
-    occurences = length . filter (character ==) $ password
-
 passwordLine :: Parser PasswordLine
 passwordLine = (\a b -> (a, b)) <$> (passwordPolicy <* string ": ") <*> many1 lower
 
 passwordLines :: Parser [PasswordLine]
 passwordLines = linesOf passwordLine
+
+checkValid :: PasswordPolicy -> Password -> Bool
+checkValid (PasswordPolicy minOccurences maxOccurences character) password = occurences <= maxOccurences && occurences >= minOccurences
+  where
+    occurences = length . filter (character ==) $ password
 
 printResults :: [PasswordLine] -> PuzzleAnswerPair
 printResults lines = PuzzleAnswerPair (part1, part2)
