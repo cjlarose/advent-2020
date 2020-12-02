@@ -17,10 +17,10 @@ data PasswordPolicy = PasswordPolicy { minOccurences :: Int
 type PasswordLine = (PasswordPolicy, Password)
 
 passwordPolicy :: Parser PasswordPolicy
-passwordPolicy = PasswordPolicy <$> (nonNegativeInteger <* char '-') <*> (nonNegativeInteger <* char ' ') <*> lower
+passwordPolicy = PasswordPolicy <$> nonNegativeInteger <* char '-' <*> nonNegativeInteger <* char ' ' <*> lower
 
 passwordLine :: Parser PasswordLine
-passwordLine = (\a b -> (a, b)) <$> (passwordPolicy <* string ": ") <*> many1 lower
+passwordLine = (\a b -> (a, b)) <$> passwordPolicy <* string ": " <*> many1 lower
 
 passwordLines :: Parser [PasswordLine]
 passwordLines = linesOf passwordLine
