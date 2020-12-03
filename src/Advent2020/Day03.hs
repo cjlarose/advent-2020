@@ -24,9 +24,9 @@ treeMap = linesOf mapLine
 squaresAtSlope :: Slope -> TreeMap -> [MapSquare]
 squaresAtSlope Slope { di=di, dj=dj } lines = squares (0, 0)
   where
-    squares coord@(i, j) = case drop i lines of
-                             line:_ -> line !! j : squares (i + di, j + dj)
-                             _ -> []
+    squares (i, j) = case drop i lines of
+                       line:_ -> line !! j : squares (i + di, j + dj)
+                       _ -> []
 
 numTreesOnSlope :: Slope -> TreeMap -> Int
 numTreesOnSlope slope = length . filter isTree . squaresAtSlope slope
