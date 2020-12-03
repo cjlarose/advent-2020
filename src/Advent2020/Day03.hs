@@ -26,7 +26,7 @@ mapLines = linesOf mapLine
     mapSquare = (OpenSquare <$ char '.') <|> (Tree <$ char '#')
 
 squaresAtSlope :: Slope -> TreeMap -> [MapSquare]
-squaresAtSlope (Slope di dj) lines = map fromJust . takeWhile isJust . map squareAt $ coords
+squaresAtSlope Slope { di=di, dj=dj } lines = map fromJust . takeWhile isJust . map squareAt $ coords
   where
     squareAt (i, j) | i >= length lines = Nothing
                     | otherwise = Just $ lines !! i !! j
