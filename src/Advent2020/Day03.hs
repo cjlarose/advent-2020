@@ -27,8 +27,8 @@ squaresAtSlope Slope { di=di, dj=dj } lines = map squareAt coords
     squareAt (i, j) = lines !! i !! j
     coords = takeWhile (\(i, _) -> i < length lines) . iterate (\(i, j) -> (i + di, j + dj)) $ (0, 0)
 
-treesOnSlope :: Slope -> TreeMap -> Int
-treesOnSlope slope = length . filter isTree . squaresAtSlope slope
+numTreesOnSlope :: Slope -> TreeMap -> Int
+numTreesOnSlope slope = length . filter isTree . squaresAtSlope slope
   where
     isTree Tree = True
     isTree _ = False
@@ -36,9 +36,9 @@ treesOnSlope slope = length . filter isTree . squaresAtSlope slope
 printResults :: TreeMap -> PuzzleAnswerPair
 printResults lines = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show $ treesOnSlope (Slope 1 3) lines
+    part1 = show $ numTreesOnSlope (Slope 1 3) lines
     slopes = [Slope 1 1, Slope 1 3, Slope 1 5, Slope 1 7, Slope 2 1]
-    part2 = show . product . map (`treesOnSlope` lines) $ slopes
+    part2 = show . product . map (`numTreesOnSlope` lines) $ slopes
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse treeMap printResults <$> getProblemInputAsByteString 3
