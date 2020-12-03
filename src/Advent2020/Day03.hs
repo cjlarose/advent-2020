@@ -16,8 +16,8 @@ type MapLine = [MapSquare]
 type TreeMap = [MapLine]
 data Slope = Slope { di :: Int, dj :: Int }
 
-mapLines :: Parser TreeMap
-mapLines = linesOf mapLine
+treeMap :: Parser TreeMap
+treeMap = linesOf mapLine
   where
     mapLine = cycle <$> many1 mapSquare
     mapSquare = (OpenSquare <$ char '.') <|> (Tree <$ char '#')
@@ -44,4 +44,4 @@ printResults lines = PuzzleAnswerPair (part1, part2)
     part2 = show . product . map (`treesOnSlope` lines) $ slopes
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse mapLines printResults <$> getProblemInputAsByteString 3
+solve = withSuccessfulParse treeMap printResults <$> getProblemInputAsByteString 3
