@@ -32,6 +32,7 @@ squaresAtSlope (Slope di dj) lines = map fromJust . takeWhile isJust . map squar
 
     coords = iterate (\(i, j) -> (i + di, j + dj)) (0, 0)
 
+treesOnSlope :: Slope -> [MapLine] -> Int
 treesOnSlope slope = length . filter isTree . squaresAtSlope slope
   where
     isTree Tree = True
