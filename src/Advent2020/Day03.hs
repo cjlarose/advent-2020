@@ -24,7 +24,10 @@ treeMap = linesOf mapLine
 numTreesOnSlope :: Slope -> TreeMap -> Int
 numTreesOnSlope Slope { di=di, dj=dj } = numTrees 0 0
   where
-    numTrees j acc m@(line:_) = numTrees (j + dj) (case line !! j of { Tree -> succ acc; _ -> acc }) $ drop di m
+    numTrees j acc m@(line:_) = numTrees (j + dj) newCount $ drop di m
+      where newCount = case line !! j of
+                         Tree -> 1 + acc
+                         OpenSquare -> acc
     numTrees j acc _ = acc
 
 printResults :: TreeMap -> PuzzleAnswerPair
