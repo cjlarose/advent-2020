@@ -2,7 +2,6 @@ module Advent2020.Day03
   ( solve
   ) where
 
-import Data.Maybe (Maybe(..), isJust, fromJust)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec (many1, (<|>))
 import Text.Parsec.Char (char)
@@ -23,12 +22,10 @@ treeMap = linesOf mapLine
     mapSquare = (OpenSquare <$ char '.') <|> (Tree <$ char '#')
 
 squaresAtSlope :: Slope -> TreeMap -> [MapSquare]
-squaresAtSlope Slope { di=di, dj=dj } lines = map fromJust . takeWhile isJust . map squareAt $ coords
+squaresAtSlope Slope { di=di, dj=dj } lines = map squareAt coords
   where
-    squareAt (i, j) | i >= length lines = Nothing
-                    | otherwise = Just $ lines !! i !! j
-
-    coords = iterate (\(i, j) -> (i + di, j + dj)) (0, 0)
+    squareAt (i, j) = lines !! i !! j
+    coords = takeWhile (\(i, _) -> i < length lines) . iterate (\(i, j) -> (i + di, j + dj)) $ (0, 0)
 
 treesOnSlope :: Slope -> TreeMap -> Int
 treesOnSlope slope = length . filter isTree . squaresAtSlope slope
