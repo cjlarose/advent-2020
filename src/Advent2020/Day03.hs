@@ -22,10 +22,14 @@ treeMap = linesOf mapLine
     mapSquare = (OpenSquare <$ char '.') <|> (Tree <$ char '#')
 
 squaresAtSlope :: Slope -> TreeMap -> [MapSquare]
-squaresAtSlope Slope { di=di, dj=dj } lines = map squareAt coords
+squaresAtSlope Slope { di=di, dj=dj } lines = squares (0, 0)
   where
-    squareAt (i, j) = lines !! i !! j
-    coords = takeWhile (\(i, _) -> i < length lines) . iterate (\(i, j) -> (i + di, j + dj)) $ (0, 0)
+    squareAt (i, j) = case drop i lines of
+                        line:_ -> Just $ line !! j
+                        _ -> Nothing
+    squares coord@(i, j) = case squareAt coord of
+                             Just square -> square : squares (i + di, j + dj)
+                             Nothing -> []
 
 numTreesOnSlope :: Slope -> TreeMap -> Int
 numTreesOnSlope slope = length . filter isTree . squaresAtSlope slope
