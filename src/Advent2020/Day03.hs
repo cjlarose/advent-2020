@@ -22,11 +22,10 @@ treeMap = linesOf mapLine
     mapSquare = (OpenSquare <$ char '.') <|> (Tree <$ char '#')
 
 numTreesOnSlope :: Slope -> TreeMap -> Int
-numTreesOnSlope Slope { di=di, dj=dj } lines = numTrees (0, 0) 0
+numTreesOnSlope Slope { di=di, dj=dj } = numTrees 0 0
   where
-    numTrees (i, j) acc = case drop i lines of
-                            line:_ -> numTrees (i + di, j + dj) $ case line !! j of { Tree -> succ acc; _ -> acc }
-                            _ -> acc
+    numTrees j acc m@(line:rest) = numTrees (j + dj) (case line !! j of { Tree -> succ acc; _ -> acc }) $ drop di m
+    numTrees j acc _ = acc
 
 printResults :: TreeMap -> PuzzleAnswerPair
 printResults lines = PuzzleAnswerPair (part1, part2)
