@@ -5,11 +5,11 @@ module Advent2020.Day03
 import Data.Maybe (Maybe(..), isJust, fromJust)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec (many1, (<|>))
-import Text.Parsec.Char (string, lower, char)
+import Text.Parsec.Char (char)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, nonNegativeInteger)
+import Advent.CommonParsers (linesOf)
 
 data MapSquare = OpenSquare | Tree deriving Show
 type MapLine = [MapSquare]
