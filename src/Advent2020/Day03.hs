@@ -13,9 +13,10 @@ import Advent.CommonParsers (linesOf)
 
 data MapSquare = OpenSquare | Tree deriving Show
 type MapLine = [MapSquare]
+type TreeMap = [MapLine]
 data Slope = Slope { di :: Int, dj :: Int }
 
-mapLines :: Parser [MapLine]
+mapLines :: Parser TreeMap
 mapLines = linesOf mapLine
   where
     mapLine :: Parser MapLine
@@ -24,7 +25,7 @@ mapLines = linesOf mapLine
     mapSquare :: Parser MapSquare
     mapSquare = (OpenSquare <$ char '.') <|> (Tree <$ char '#')
 
-squaresAtSlope :: Slope -> [MapLine] -> [MapSquare]
+squaresAtSlope :: Slope -> TreeMap -> [MapSquare]
 squaresAtSlope (Slope di dj) lines = map fromJust . takeWhile isJust . map squareAt $ coords
   where
     squareAt (i, j) | i >= length lines = Nothing
@@ -32,13 +33,13 @@ squaresAtSlope (Slope di dj) lines = map fromJust . takeWhile isJust . map squar
 
     coords = iterate (\(i, j) -> (i + di, j + dj)) (0, 0)
 
-treesOnSlope :: Slope -> [MapLine] -> Int
+treesOnSlope :: Slope -> TreeMap -> Int
 treesOnSlope slope = length . filter isTree . squaresAtSlope slope
   where
     isTree Tree = True
     isTree _ = False
 
-printResults :: [MapLine] -> PuzzleAnswerPair
+printResults :: TreeMap -> PuzzleAnswerPair
 printResults lines = PuzzleAnswerPair (part1, part2)
   where
     part1 = show $ treesOnSlope (Slope 1 3) lines
