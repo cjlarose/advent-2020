@@ -19,10 +19,7 @@ data Slope = Slope { di :: Int, dj :: Int }
 mapLines :: Parser TreeMap
 mapLines = linesOf mapLine
   where
-    mapLine :: Parser MapLine
     mapLine = cycle <$> many1 mapSquare
-
-    mapSquare :: Parser MapSquare
     mapSquare = (OpenSquare <$ char '.') <|> (Tree <$ char '#')
 
 squaresAtSlope :: Slope -> TreeMap -> [MapSquare]
