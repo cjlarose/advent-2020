@@ -32,13 +32,17 @@ squaresAtSlope (Slope di dj) lines = map fromJust . takeWhile isJust . map squar
 
     coords = iterate (\(i, j) -> (i + di, j + dj)) (0, 0)
 
-printResults :: [MapLine] -> PuzzleAnswerPair
-printResults lines = PuzzleAnswerPair (part1, part2)
+treesOnSlope slope = length . filter isTree . squaresAtSlope slope
   where
     isTree Tree = True
     isTree _ = False
-    part1 = show . length . filter isTree . squaresAtSlope (Slope 1 3) $ lines
-    part2 = "not yet implemented"
+
+printResults :: [MapLine] -> PuzzleAnswerPair
+printResults lines = PuzzleAnswerPair (part1, part2)
+  where
+    part1 = show $ treesOnSlope (Slope 1 3) lines
+    slopes = [Slope 1 1, Slope 1 3, Slope 1 5, Slope 1 7, Slope 2 1]
+    part2 = show $ foldl ((*)) 1 $ map (flip treesOnSlope lines) slopes
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse mapLines printResults <$> getProblemInputAsByteString 3
