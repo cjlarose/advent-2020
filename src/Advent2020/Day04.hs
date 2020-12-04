@@ -32,33 +32,19 @@ validPassport passport = hasRequiredKeys passport && allRequiredFieldsValid
 passportsP :: Parser [Passport]
 passportsP = sepBy1 passport endOfLine <* eof
   where
-    passport :: Parser Passport
     passport = Map.fromList <$> many1 field
-
     endF = endOfLine <|> char ' '
     junk = Nothing <$ many1 (alphaNum <|> char '#') <* endF
-
-    fieldType :: String -> Parser (Maybe Field) -> Parser (String, Maybe Field)
     fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (p <* endF) <|> junk)
-
-    anyOf :: Show a => [a] -> Parser String
     anyOf = choice . map (try . string . show)
-
     byr = fieldType "byr" (Just BYR <$ anyOf [1920..2002])
     iyr = fieldType "iyr" (Just IYR <$ anyOf [2010..2020])
     eyr = fieldType "eyr" (Just EYR <$ anyOf [2020..2030])
-
     hgt = fieldType "hgt" (Just HGT <$ (try (anyOf [150..193] <* string "cm") <|> (anyOf [59..76] <* string "in")))
-
     hcl = fieldType "hcl" (Just HCL <$ char '#' <* count 6 hexDigit)
-
     ecl = fieldType "ecl" (Just ECL <$ (choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]))
-
     pid = fieldType "pid" (Just PID <$ count 9 digit)
-
     cid = fieldType "cid" (Just CID <$ many1 (alphaNum <|> char '#'))
-
-    field :: Parser (String, Maybe Field)
     field = byr <|> iyr <|> eyr <|> hgt <|> hcl <|> ecl <|> pid <|> cid
 
 printResults :: [Passport] -> PuzzleAnswerPair
