@@ -34,8 +34,9 @@ passportsP = sepBy1 passport endOfLine <* eof
   where
     passport = Map.fromList <$> many1 field
     endF = endOfLine <|> char ' '
-    junk = Nothing <$ many1 (alphaNum <|> char '#') <* endF
-    fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (p <* endF) <|> junk)
+    junk = many1 (alphaNum <|> char '#')
+    junkF = Nothing <$ junk <* endF
+    fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (p <* endF) <|> junkF)
     anyOf = choice . map (try . string . show)
     byr = fieldType "byr" (Just BYR <$ anyOf [1920..2002])
     iyr = fieldType "iyr" (Just IYR <$ anyOf [2010..2020])
@@ -44,7 +45,7 @@ passportsP = sepBy1 passport endOfLine <* eof
     hcl = fieldType "hcl" (Just HCL <$ char '#' <* count 6 hexDigit)
     ecl = fieldType "ecl" (Just ECL <$ (choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]))
     pid = fieldType "pid" (Just PID <$ count 9 digit)
-    cid = fieldType "cid" (Just CID <$ many1 (alphaNum <|> char '#'))
+    cid = fieldType "cid" (Just CID <$ junk)
     field = byr <|> iyr <|> eyr <|> hgt <|> hcl <|> ecl <|> pid <|> cid
 
 printResults :: [Passport] -> PuzzleAnswerPair
