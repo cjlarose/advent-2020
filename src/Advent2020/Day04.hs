@@ -47,7 +47,7 @@ passportsP = sepBy1 passport endOfLine <* eof
     ecl = fieldType "ecl" . choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
     pid = fieldType "pid" $ count 9 digit
     cid = fieldType "cid" junk
-    field = byr <|> iyr <|> eyr <|> hgt <|> hcl <|> ecl <|> pid <|> cid
+    field = choice [byr, iyr, eyr, hgt, hcl, ecl, pid, cid]
 
 printResults :: [Passport] -> PuzzleAnswerPair
 printResults passports = PuzzleAnswerPair (part1, part2)
