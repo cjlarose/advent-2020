@@ -38,39 +38,31 @@ passportsP = sepBy1 passport endOfLine <* eof
     endF = endOfLine <|> char ' '
     junk = Nothing <$ many1 (alphaNum <|> char '#') <* endF
 
-    byr :: Parser (String, Maybe Field)
     byr = (\a b -> (a, b)) <$> try (string "byr" <* char ':') <*> (try (validate <$> nonNegativeInteger <* endF) <|> junk)
       where validate yr | yr >= 1920 && yr <= 2002 = Just BYR
                         | otherwise = Nothing
 
-    iyr :: Parser (String, Maybe Field)
     iyr = (\a b -> (a, b)) <$> try (string "iyr" <* char ':') <*> (try (validate <$> nonNegativeInteger <* endF) <|> junk)
       where validate yr | yr >= 2010 && yr <= 2020 = Just IYR
                         | otherwise = Nothing
 
-    eyr :: Parser (String, Maybe Field)
     eyr = (\a b -> (a, b)) <$> try (string "eyr" <* char ':') <*> (try (validate <$> nonNegativeInteger <* endF) <|> junk)
       where validate yr | yr >= 2020 && yr <= 2030 = Just EYR
                         | otherwise = Nothing
 
-    hgt :: Parser (String, Maybe Field)
     hgt = (\a b -> (a, b)) <$> try (string "hgt" <* char ':') <*> (try (validate <$> nonNegativeInteger <*> (string "in" <|> string "cm") <* endF) <|> junk)
       where validate cm "cm" | cm >= 150 && cm <= 193 = Just HGT
                              | otherwise = Nothing
             validate inches "in" | inches >= 59 && inches <= 76 = Just HGT
                                  | otherwise = Nothing
 
-    hcl :: Parser (String, Maybe Field)
     hcl = (\a b -> (a, b)) <$> try (string "hcl" <* char ':') <*> (try (Just HCL <$ (char '#' *> count 6 hexDigit <* endF)) <|> junk)
 
-    ecl :: Parser (String, Maybe Field)
     ecl = (\a b -> (a, b)) <$> try (string "ecl" <* char ':') <*> (try (Just ECL <$ validHairColor <* endF) <|> junk)
       where validHairColor = string "amb" <|> try (string "blu") <|> string "brn" <|> try (string "gry") <|> string "grn" <|> string "hzl" <|> string "oth"
 
-    pid :: Parser (String, Maybe Field)
     pid = (\a b -> (a, b)) <$> try (string "pid" <* char ':') <*> (try (Just PID <$ count 9 digit <* endF) <|> junk)
 
-    cid :: Parser (String, Maybe Field)
     cid = (\a b -> (a, b)) <$> try (string "cid" <* char ':') <*> (Just CID <$ many1 (alphaNum <|> char '#') <* endF)
 
     field :: Parser (String, Maybe Field)
