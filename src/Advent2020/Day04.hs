@@ -38,11 +38,15 @@ passportsP = sepBy1 passport endOfLine <* eof
     endF = endOfLine <|> char ' '
     junk = many1 (alphaNum <|> char '#')
     fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (Valid <$ p <* endF) <|> (Invalid <$ junk <* endF))
-    anyOf = choice . map (try . string . show)
-    byr = fieldType "byr" $ anyOf [1920..2002]
-    iyr = fieldType "iyr" $ anyOf [2010..2020]
-    eyr = fieldType "eyr" $ anyOf [2020..2030]
-    hgt = fieldType "hgt" $ try (anyOf [150..193] <* string "cm") <|> (anyOf [59..76] <* string "in")
+    nonNegativeDecimalIntegerInRange min max = do
+      val <- nonNegativeInteger
+      if val >= min && val <= max
+        then pure . show $ val
+        else fail "no parse"
+    byr = fieldType "byr" $ nonNegativeDecimalIntegerInRange 1920 2002
+    iyr = fieldType "iyr" $ nonNegativeDecimalIntegerInRange 2010 2020
+    eyr = fieldType "eyr" $ nonNegativeDecimalIntegerInRange 2020 2030
+    hgt = fieldType "hgt" $ try (nonNegativeDecimalIntegerInRange 150 193 <* string "cm") <|> (nonNegativeDecimalIntegerInRange 59 76 <* string "in")
     hcl = fieldType "hcl" $ char '#' *> count 6 hexDigit
     ecl = fieldType "ecl" . choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
     pid = fieldType "pid" $ count 9 digit
