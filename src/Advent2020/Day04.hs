@@ -15,14 +15,7 @@ import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (nonNegativeInteger)
 
-data Field = BYR
-           | IYR
-           | EYR
-           | HGT
-           | HCL
-           | ECL
-           | PID
-           | CID deriving Show
+data Field = BYR | IYR | EYR | HGT | HCL | ECL | PID | CID deriving Show
 type Passport = Map String (Maybe Field)
 
 requiredKeys :: Set String
