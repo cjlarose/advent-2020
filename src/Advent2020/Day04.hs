@@ -48,11 +48,7 @@ passportsP = sepBy1 passport endOfLine <* eof
     iyr = fieldType "iyr" (Just IYR <$ anyOf [2010..2020])
     eyr = fieldType "eyr" (Just EYR <$ anyOf [2020..2030])
 
-    hgt = fieldType "hgt" (validate <$> nonNegativeInteger <*> (string "in" <|> string "cm"))
-      where validate cm "cm" | cm >= 150 && cm <= 193 = Just HGT
-                             | otherwise = Nothing
-            validate inches "in" | inches >= 59 && inches <= 76 = Just HGT
-                                 | otherwise = Nothing
+    hgt = fieldType "hgt" (Just HGT <$ (try (anyOf [150..193] <* string "cm") <|> (anyOf [59..76] <* string "in")))
 
     hcl = fieldType "hcl" (Just HCL <$ char '#' <* count 6 hexDigit)
 
