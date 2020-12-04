@@ -25,15 +25,16 @@ data Field = BYR
            | CID deriving Show
 type Passport = Map String (Maybe Field)
 
-requiredKeys = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
+requiredKeys :: Set String
+requiredKeys = Set.fromList ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
 
 hasRequiredKeys :: Passport -> Bool
-hasRequiredKeys = Set.isSubsetOf (Set.fromList requiredKeys) . Map.keysSet
+hasRequiredKeys = Set.isSubsetOf requiredKeys . Map.keysSet
 
 validPassport :: Passport -> Bool
 validPassport passport = hasRequiredKeys passport && allRequiredFieldsValid
   where
-    allRequiredFieldsValid = all isJust . Map.elems . Map.restrictKeys passport $ Set.fromList requiredKeys
+    allRequiredFieldsValid = all isJust . Map.elems . Map.restrictKeys passport $ requiredKeys
 
 passportsP :: Parser [Passport]
 passportsP = sepBy1 passport endOfLine <* eof
