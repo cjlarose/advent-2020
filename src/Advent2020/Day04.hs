@@ -8,12 +8,12 @@ import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.Maybe (isJust)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (string, lower, char, alphaNum, endOfLine, digit, hexDigit)
-import Text.Parsec (many1, sepBy1, sepEndBy1, eof, (<|>), count, try)
+import Text.Parsec.Char (char, string, alphaNum, endOfLine, digit, hexDigit)
+import Text.Parsec (many1, sepBy1, eof, (<|>), count, try)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, nonNegativeInteger)
+import Advent.CommonParsers (nonNegativeInteger)
 
 data Field = BYR
            | IYR
