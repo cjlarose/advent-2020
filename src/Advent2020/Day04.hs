@@ -52,8 +52,7 @@ passportsP = sepBy1 passport endOfLine <* eof
 
     hcl = fieldType "hcl" (Just HCL <$ char '#' <* count 6 hexDigit)
 
-    ecl = fieldType "ecl" (Just ECL <$ validHairColor)
-      where validHairColor = string "amb" <|> try (string "blu") <|> string "brn" <|> try (string "gry") <|> string "grn" <|> string "hzl" <|> string "oth"
+    ecl = fieldType "ecl" (Just ECL <$ (choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]))
 
     pid = fieldType "pid" (Just PID <$ count 9 digit)
 
