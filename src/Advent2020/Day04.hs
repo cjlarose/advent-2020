@@ -36,16 +36,16 @@ passportsP = sepBy1 passport endOfLine <* eof
     endF = endOfLine <|> char ' '
     junk = many1 (alphaNum <|> char '#')
     junkF = Nothing <$ junk <* endF
-    fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (p <* endF) <|> junkF)
+    fieldType key v p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (Just v <$ p <* endF) <|> junkF)
     anyOf = choice . map (try . string . show)
-    byr = fieldType "byr" (Just BYR <$ anyOf [1920..2002])
-    iyr = fieldType "iyr" (Just IYR <$ anyOf [2010..2020])
-    eyr = fieldType "eyr" (Just EYR <$ anyOf [2020..2030])
-    hgt = fieldType "hgt" (Just HGT <$ (try (anyOf [150..193] <* string "cm") <|> (anyOf [59..76] <* string "in")))
-    hcl = fieldType "hcl" (Just HCL <$ char '#' <* count 6 hexDigit)
-    ecl = fieldType "ecl" (Just ECL <$ (choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]))
-    pid = fieldType "pid" (Just PID <$ count 9 digit)
-    cid = fieldType "cid" (Just CID <$ junk)
+    byr = fieldType "byr" BYR $ anyOf [1920..2002]
+    iyr = fieldType "iyr" IYR $ anyOf [2010..2020]
+    eyr = fieldType "eyr" EYR $ anyOf [2020..2030]
+    hgt = fieldType "hgt" HGT $ try (anyOf [150..193] <* string "cm") <|> (anyOf [59..76] <* string "in")
+    hcl = fieldType "hcl" HCL $ char '#' *> count 6 hexDigit
+    ecl = fieldType "ecl" ECL . choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
+    pid = fieldType "pid" PID $ count 9 digit
+    cid = fieldType "cid" CID junk
     field = byr <|> iyr <|> eyr <|> hgt <|> hcl <|> ecl <|> pid <|> cid
 
 printResults :: [Passport] -> PuzzleAnswerPair
