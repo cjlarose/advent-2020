@@ -38,32 +38,35 @@ passportsP = sepBy1 passport endOfLine <* eof
     endF = endOfLine <|> char ' '
     junk = Nothing <$ many1 (alphaNum <|> char '#') <* endF
 
-    byr = (\a b -> (a, b)) <$> try (string "byr" <* char ':') <*> (try (validate <$> nonNegativeInteger <* endF) <|> junk)
+    fieldType :: String -> Parser (Maybe Field) -> Parser (String, Maybe Field)
+    fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (p <* endF) <|> junk)
+
+    byr = fieldType "byr" (validate <$> nonNegativeInteger)
       where validate yr | yr >= 1920 && yr <= 2002 = Just BYR
                         | otherwise = Nothing
 
-    iyr = (\a b -> (a, b)) <$> try (string "iyr" <* char ':') <*> (try (validate <$> nonNegativeInteger <* endF) <|> junk)
+    iyr = fieldType "iyr" (validate <$> nonNegativeInteger)
       where validate yr | yr >= 2010 && yr <= 2020 = Just IYR
                         | otherwise = Nothing
 
-    eyr = (\a b -> (a, b)) <$> try (string "eyr" <* char ':') <*> (try (validate <$> nonNegativeInteger <* endF) <|> junk)
+    eyr = fieldType "eyr" (validate <$> nonNegativeInteger)
       where validate yr | yr >= 2020 && yr <= 2030 = Just EYR
                         | otherwise = Nothing
 
-    hgt = (\a b -> (a, b)) <$> try (string "hgt" <* char ':') <*> (try (validate <$> nonNegativeInteger <*> (string "in" <|> string "cm") <* endF) <|> junk)
+    hgt = fieldType "hgt" (validate <$> nonNegativeInteger <*> (string "in" <|> string "cm"))
       where validate cm "cm" | cm >= 150 && cm <= 193 = Just HGT
                              | otherwise = Nothing
             validate inches "in" | inches >= 59 && inches <= 76 = Just HGT
                                  | otherwise = Nothing
 
-    hcl = (\a b -> (a, b)) <$> try (string "hcl" <* char ':') <*> (try (Just HCL <$ (char '#' *> count 6 hexDigit <* endF)) <|> junk)
+    hcl = fieldType "hcl" (Just HCL <$ char '#' <* count 6 hexDigit)
 
-    ecl = (\a b -> (a, b)) <$> try (string "ecl" <* char ':') <*> (try (Just ECL <$ validHairColor <* endF) <|> junk)
+    ecl = fieldType "ecl" (Just ECL <$ validHairColor)
       where validHairColor = string "amb" <|> try (string "blu") <|> string "brn" <|> try (string "gry") <|> string "grn" <|> string "hzl" <|> string "oth"
 
-    pid = (\a b -> (a, b)) <$> try (string "pid" <* char ':') <*> (try (Just PID <$ count 9 digit <* endF) <|> junk)
+    pid = fieldType "pid" (Just PID <$ count 9 digit)
 
-    cid = (\a b -> (a, b)) <$> try (string "cid" <* char ':') <*> (Just CID <$ many1 (alphaNum <|> char '#') <* endF)
+    cid = fieldType "cid" (Just CID <$ many1 (alphaNum <|> char '#'))
 
     field :: Parser (String, Maybe Field)
     field = byr <|> iyr <|> eyr <|> hgt <|> hcl <|> ecl <|> pid <|> cid
