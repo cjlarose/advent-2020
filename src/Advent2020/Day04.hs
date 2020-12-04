@@ -15,8 +15,8 @@ import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (nonNegativeInteger)
 
-data Field = BYR | IYR | EYR | HGT | HCL | ECL | PID | CID deriving Show
-type Passport = Map String (Maybe Field)
+data FieldValue = Valid | Invalid deriving Show
+type Passport = Map String FieldValue
 
 requiredKeys :: Set String
 requiredKeys = Set.fromList ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
@@ -27,7 +27,9 @@ hasRequiredKeys = Set.isSubsetOf requiredKeys . Map.keysSet
 validPassport :: Passport -> Bool
 validPassport passport = hasRequiredKeys passport && allRequiredFieldsValid
   where
-    allRequiredFieldsValid = all isJust . Map.elems . Map.restrictKeys passport $ requiredKeys
+    allRequiredFieldsValid = all isValid . Map.elems . Map.restrictKeys passport $ requiredKeys
+    isValid Valid = True
+    isValid _ = False
 
 passportsP :: Parser [Passport]
 passportsP = sepBy1 passport endOfLine <* eof
@@ -35,17 +37,17 @@ passportsP = sepBy1 passport endOfLine <* eof
     passport = Map.fromList <$> many1 field
     endF = endOfLine <|> char ' '
     junk = many1 (alphaNum <|> char '#')
-    junkF = Nothing <$ junk <* endF
-    fieldType key v p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (Just v <$ p <* endF) <|> junkF)
+    junkF = Invalid <$ junk <* endF
+    fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (Valid <$ p <* endF) <|> junkF)
     anyOf = choice . map (try . string . show)
-    byr = fieldType "byr" BYR $ anyOf [1920..2002]
-    iyr = fieldType "iyr" IYR $ anyOf [2010..2020]
-    eyr = fieldType "eyr" EYR $ anyOf [2020..2030]
-    hgt = fieldType "hgt" HGT $ try (anyOf [150..193] <* string "cm") <|> (anyOf [59..76] <* string "in")
-    hcl = fieldType "hcl" HCL $ char '#' *> count 6 hexDigit
-    ecl = fieldType "ecl" ECL . choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
-    pid = fieldType "pid" PID $ count 9 digit
-    cid = fieldType "cid" CID junk
+    byr = fieldType "byr" $ anyOf [1920..2002]
+    iyr = fieldType "iyr" $ anyOf [2010..2020]
+    eyr = fieldType "eyr" $ anyOf [2020..2030]
+    hgt = fieldType "hgt" $ try (anyOf [150..193] <* string "cm") <|> (anyOf [59..76] <* string "in")
+    hcl = fieldType "hcl" $ char '#' *> count 6 hexDigit
+    ecl = fieldType "ecl" . choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
+    pid = fieldType "pid" $ count 9 digit
+    cid = fieldType "cid" junk
     field = byr <|> iyr <|> eyr <|> hgt <|> hcl <|> ecl <|> pid <|> cid
 
 printResults :: [Passport] -> PuzzleAnswerPair
