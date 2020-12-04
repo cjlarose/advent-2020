@@ -41,11 +41,12 @@ passportsP = sepBy1 passport endOfLine <* eof
     fieldType :: String -> Parser (Maybe Field) -> Parser (String, Maybe Field)
     fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (p <* endF) <|> junk)
 
-    byr = fieldType "byr" (Just BYR <$ (choice . map (try . string . show) $ [1920..2002]))
+    anyOf :: Show a => [a] -> Parser String
+    anyOf = choice . map (try . string . show)
 
-    iyr = fieldType "iyr" (Just IYR <$ (choice . map (try . string . show) $ [2010..2020]))
-
-    eyr = fieldType "eyr" (Just EYR <$ (choice . map (try . string . show) $ [2020..2030]))
+    byr = fieldType "byr" (Just BYR <$ anyOf [1920..2002])
+    iyr = fieldType "iyr" (Just IYR <$ anyOf [2010..2020])
+    eyr = fieldType "eyr" (Just EYR <$ anyOf [2020..2030])
 
     hgt = fieldType "hgt" (validate <$> nonNegativeInteger <*> (string "in" <|> string "cm"))
       where validate cm "cm" | cm >= 150 && cm <= 193 = Just HGT
