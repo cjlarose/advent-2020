@@ -9,7 +9,7 @@ import Data.Set (Set)
 import Data.Maybe (isJust)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, string, alphaNum, endOfLine, digit, hexDigit)
-import Text.Parsec (many1, sepBy1, eof, (<|>), count, try)
+import Text.Parsec (many1, sepBy1, eof, (<|>), count, try, choice)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
@@ -41,17 +41,11 @@ passportsP = sepBy1 passport endOfLine <* eof
     fieldType :: String -> Parser (Maybe Field) -> Parser (String, Maybe Field)
     fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (p <* endF) <|> junk)
 
-    byr = fieldType "byr" (validate <$> nonNegativeInteger)
-      where validate yr | yr >= 1920 && yr <= 2002 = Just BYR
-                        | otherwise = Nothing
+    byr = fieldType "byr" (Just BYR <$ (choice . map (try . string . show) $ [1920..2002]))
 
-    iyr = fieldType "iyr" (validate <$> nonNegativeInteger)
-      where validate yr | yr >= 2010 && yr <= 2020 = Just IYR
-                        | otherwise = Nothing
+    iyr = fieldType "iyr" (Just IYR <$ (choice . map (try . string . show) $ [2010..2020]))
 
-    eyr = fieldType "eyr" (validate <$> nonNegativeInteger)
-      where validate yr | yr >= 2020 && yr <= 2030 = Just EYR
-                        | otherwise = Nothing
+    eyr = fieldType "eyr" (Just EYR <$ (choice . map (try . string . show) $ [2020..2030]))
 
     hgt = fieldType "hgt" (validate <$> nonNegativeInteger <*> (string "in" <|> string "cm"))
       where validate cm "cm" | cm >= 150 && cm <= 193 = Just HGT
