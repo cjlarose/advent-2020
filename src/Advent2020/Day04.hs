@@ -7,7 +7,7 @@ import Data.Map.Strict (Map)
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (char, string, alphaNum, endOfLine, digit, hexDigit)
+import Text.Parsec.Char (char, string, alphaNum, endOfLine, digit, hexDigit, space)
 import Text.Parsec (many1, sepBy1, eof, (<|>), count, try, choice)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
@@ -35,7 +35,7 @@ passportsP = sepBy1 passport endOfLine <* eof
   where
     passport = Map.fromList <$> many1 field
     token :: Parser String -> Parser String
-    token p = p <* (endOfLine <|> char ' ')
+    token p = p <* space
     fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (Valid <$ token p) <|> (Invalid <$ token word))
     nonNegativeDecimalIntegerInRange min max = do
       val <- nonNegativeInteger
