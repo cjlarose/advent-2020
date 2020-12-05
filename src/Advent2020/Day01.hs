@@ -2,6 +2,8 @@ module Advent2020.Day01
   ( solve
   ) where
 
+import qualified Data.Set as Set
+import Data.Set (Set)
 import Control.Monad (guard)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
@@ -20,11 +22,11 @@ productOfSpecialPair entries = x * y
 productOfSpecialTriple :: [Int] -> Int
 productOfSpecialTriple entries = x * y * z
   where
+    entrySet = Set.fromList entries
     (x, y, z) = head $ do
       (a, b) <- pairs entries
-      guard $ a + b < 2020
-      let rest = 2020 - a - b
-      c <- filter (rest ==) entries
+      let c = 2020 - a - b
+      guard $ c `Set.member` entrySet
       pure (a, b, c)
 
 printResults :: [Int] -> PuzzleAnswerPair
