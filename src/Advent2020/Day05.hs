@@ -2,10 +2,7 @@ module Advent2020.Day05
   ( solve
   ) where
 
-import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map)
 import qualified Data.Set as Set
-import Data.Set (Set)
 import Control.Monad (guard)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char)
@@ -13,7 +10,7 @@ import Text.Parsec (many1, (<|>))
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, nonNegativeInteger)
+import Advent.CommonParsers (linesOf)
 
 data Seat = Seat { row :: Int, col :: Int } deriving (Show, Eq, Ord)
 
