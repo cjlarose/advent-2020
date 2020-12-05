@@ -33,13 +33,17 @@ pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
 
 seatId (Seat (r, c)) = r * 8 + c
 
+mySeatId :: [Seat] -> Int
+mySeatId seats = Set.findMin . Set.difference validSeatIds $ takenSeatIds
+  where
+    validSeatIds = Set.fromList . map (\(a, b) -> (seatId a + seatId b) `div` 2) . filter (\(a, b) -> abs (seatId a - seatId b) == 2) . pairs $ seats
+    takenSeatIds = Set.fromList . map seatId $ seats
+
 printResults :: [Seat] -> PuzzleAnswerPair
 printResults seats = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . maximum . map seatId $ seats
-    validSeatIds = Set.fromList . map (\(a, b) -> (seatId a + seatId b) `div` 2) . filter (\(a, b) -> abs (seatId a - seatId b) == 2) . pairs $ seats
-    takenSeatIds = Set.fromList . map seatId $ seats
-    part2 = show . Set.findMin . Set.difference validSeatIds $ takenSeatIds
+    part2 = show . mySeatId $ seats
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 5
