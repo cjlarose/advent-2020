@@ -19,11 +19,7 @@ newtype Seat = Seat (Int, Int) deriving (Show, Eq, Ord)
 inputParser :: Parser [Seat]
 inputParser = linesOf seat
   where
-    asInt :: [Int] -> Int
-    asInt xs = go xs 0
-      where go (x:rest) acc = go rest (acc * 2 + x)
-            go [] acc = acc
-
+    asInt = foldl (\acc x -> acc * 2 + x) 0
     seat = curry Seat <$> (asInt <$> many1 fb) <*> (asInt <$> many1 lr)
     fb = (0 <$ char 'F') <|> (1 <$ char 'B')
     lr = (0 <$ char 'L') <|> (1 <$ char 'R')
