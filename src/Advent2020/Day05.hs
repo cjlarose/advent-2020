@@ -6,6 +6,7 @@ import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set
 import Data.Set (Set)
+import Control.Monad (guard)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char)
 import Text.Parsec (many1, (<|>))
@@ -24,17 +25,20 @@ inputParser = linesOf seat
     fb = (0 <$ char 'F') <|> (1 <$ char 'B')
     lr = (0 <$ char 'L') <|> (1 <$ char 'R')
 
-pairs [] = []
-pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
-
 seatId :: Seat -> Int
 seatId (Seat (r, c)) = r * 8 + c
 
 mySeatId :: [Seat] -> Int
-mySeatId seats = Set.findMin . Set.difference validSeatIds $ takenSeatIds
+mySeatId seats = mySeat
   where
-    validSeatIds = Set.fromList . map (\(a, b) -> (seatId a + seatId b) `div` 2) . filter (\(a, b) -> abs (seatId a - seatId b) == 2) . pairs $ seats
     takenSeatIds = Set.fromList . map seatId $ seats
+    mySeat = head $ do
+      a <- seatId <$> seats
+      b <- seatId <$> seats
+      guard $ abs (a - b) == 2
+      let mySeatId = (a + b) `div` 2
+      guard . not . Set.member mySeatId $ takenSeatIds
+      pure mySeatId
 
 printResults :: [Seat] -> PuzzleAnswerPair
 printResults seats = PuzzleAnswerPair (part1, part2)
