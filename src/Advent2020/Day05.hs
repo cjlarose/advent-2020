@@ -15,7 +15,7 @@ import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf, nonNegativeInteger)
 
-newtype Seat = Seat (Int, Int) deriving Show
+newtype Seat = Seat (Int, Int) deriving (Show, Eq, Ord)
 
 inputParser :: Parser [Seat]
 inputParser = linesOf seat
@@ -29,13 +29,18 @@ inputParser = linesOf seat
     fb = (0 <$ char 'F') <|> (1 <$ char 'B')
     lr = (0 <$ char 'L') <|> (1 <$ char 'R')
 
+pairs [] = []
+pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
+
 seatId (Seat (r, c)) = r * 8 + c
 
 printResults :: [Seat] -> PuzzleAnswerPair
 printResults seats = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . maximum . map seatId $ seats
-    part2 = "not implemented"
+    validSeatIds = Set.fromList . map (\(a, b) -> (seatId a + seatId b) `div` 2) . filter (\(a, b) -> abs (seatId a - seatId b) == 2) . pairs $ seats
+    takenSeatIds = Set.fromList . map seatId $ seats
+    part2 = show . Set.findMin . Set.difference validSeatIds $ takenSeatIds
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 5
