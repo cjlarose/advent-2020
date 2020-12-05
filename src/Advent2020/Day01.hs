@@ -2,6 +2,8 @@ module Advent2020.Day01
   ( solve
   ) where
 
+import Control.Monad (guard)
+
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (listOfNonNegativeIntegers)
@@ -9,13 +11,6 @@ import Advent.CommonParsers (listOfNonNegativeIntegers)
 pairs :: [Int] -> [(Int, Int)]
 pairs [] = []
 pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
-
-triples :: [Int] -> [(Int, Int, Int)]
-triples [] = []
-triples (x:xs) = withHead ++ withoutHead
-  where
-    withHead = map (\(y, z) -> (x, y, z)) . pairs $ xs
-    withoutHead = triples xs
 
 productOfSpecialPair :: [Int] -> Int
 productOfSpecialPair entries = x * y
@@ -25,7 +20,12 @@ productOfSpecialPair entries = x * y
 productOfSpecialTriple :: [Int] -> Int
 productOfSpecialTriple entries = x * y * z
   where
-    (x, y, z) = head . filter (\(a, b, c) -> a + b + c == 2020) . triples $ entries
+    (x, y, z) = head $ do
+      (a, b) <- pairs entries
+      guard $ a + b < 2020
+      let rest = 2020 - a - b
+      c <- filter (rest ==) entries
+      pure (a, b, c)
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults entries = PuzzleAnswerPair (part1, part2)
