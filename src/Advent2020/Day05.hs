@@ -40,7 +40,7 @@ mySeatId seats = mySeat
 printResults :: [Seat] -> PuzzleAnswerPair
 printResults seats = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . maximum . map seatId $ seats
+    part1 = show . seatId . maximum $ seats
     part2 = show . mySeatId $ seats
 
 solve :: IO (Either String PuzzleAnswerPair)
