@@ -12,7 +12,7 @@ import Text.Parsec (many1, sepBy1, eof, (<|>), count, try, choice)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (nonNegativeInteger)
+import Advent.CommonParsers (nonNegativeInteger, word)
 
 data FieldValue = Valid | Invalid deriving Show
 type Passport = Map String FieldValue
@@ -35,8 +35,7 @@ passportsP = sepBy1 passport endOfLine <* eof
   where
     passport = Map.fromList <$> many1 field
     endF = endOfLine <|> char ' '
-    junk = many1 (alphaNum <|> char '#')
-    fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (Valid <$ p <* endF) <|> (Invalid <$ junk <* endF))
+    fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (Valid <$ p <* endF) <|> (Invalid <$ word <* endF))
     nonNegativeDecimalIntegerInRange min max = do
       val <- nonNegativeInteger
       if val >= min && val <= max
@@ -49,7 +48,7 @@ passportsP = sepBy1 passport endOfLine <* eof
     hcl = fieldType "hcl" $ char '#' *> count 6 hexDigit
     ecl = fieldType "ecl" . choice . map (try . string) $ ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
     pid = fieldType "pid" $ count 9 digit
-    cid = fieldType "cid" junk
+    cid = fieldType "cid" word
     field = choice [byr, iyr, eyr, hgt, hcl, ecl, pid, cid]
 
 printResults :: [Passport] -> PuzzleAnswerPair
