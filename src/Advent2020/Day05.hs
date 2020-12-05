@@ -29,10 +29,12 @@ inputParser = linesOf seat
     fb = (0 <$ char 'F') <|> (1 <$ char 'B')
     lr = (0 <$ char 'L') <|> (1 <$ char 'R')
 
+seatId (Seat (r, c)) = r * 8 + c
+
 printResults :: [Seat] -> PuzzleAnswerPair
 printResults seats = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . maximum . map (\(Seat (r, c)) -> (r * 8) + c) $ seats
+    part1 = show . maximum . map seatId $ seats
     part2 = "not implemented"
 
 solve :: IO (Either String PuzzleAnswerPair)
