@@ -16,9 +16,6 @@ resultToBS (Right (PuzzleAnswerPair (part1, part2))) = runPut $ do
                                                          putStringUtf8 part2
                                                          putCharUtf8 '\n'
 
-solve :: Int -> IO LBS.ByteString
-solve k = resultToBS <$> solverForProblem k
-
 main :: IO ()
 main = defaultMain =<< goldenTests
 
@@ -27,7 +24,7 @@ goldenTestForProblem n = goldenVsString testName outputFile action
   where
     testName = "Day " ++ show n
     outputFile = "outputs" </> show n <.> "txt"
-    action = solve n
+    action = resultToBS <$> solverForProblem n
 
 goldenTests :: IO TestTree
 goldenTests = do
