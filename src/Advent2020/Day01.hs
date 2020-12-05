@@ -17,7 +17,12 @@ pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
 productOfSpecialPair :: [Int] -> Int
 productOfSpecialPair entries = x * y
   where
-    (x, y) = head . filter (\(a, b) -> a + b == 2020) . pairs $ entries
+    entrySet = Set.fromList entries
+    (x, y) = head $ do
+      a <- entries
+      let b = 2020 - a
+      guard $ b `Set.member` entrySet
+      pure (a, b)
 
 productOfSpecialTriple :: [Int] -> Int
 productOfSpecialTriple entries = x * y * z
