@@ -8,17 +8,16 @@ import Test.Tasty.Golden (goldenVsString, findByExtension)
 import Advent2020.Solve (solverForProblem)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
+resultToBS :: Either String PuzzleAnswerPair -> LBS.ByteString
+resultToBS (Left err) = runPut $ putStringUtf8 err >> putCharUtf8 '\n'
+resultToBS (Right (PuzzleAnswerPair (part1, part2))) = runPut $ do
+                                                         putStringUtf8 part1
+                                                         putCharUtf8 '\n'
+                                                         putStringUtf8 part2
+                                                         putCharUtf8 '\n'
+
 solve :: Int -> IO LBS.ByteString
-solve k = do
-  res <- solverForProblem k
-  let bs = case res of
-             Left err -> runPut $ putStringUtf8 err >> putCharUtf8 '\n'
-             Right (PuzzleAnswerPair (part1, part2)) -> runPut $ do
-                                                          putStringUtf8 part1
-                                                          putCharUtf8 '\n'
-                                                          putStringUtf8 part2
-                                                          putCharUtf8 '\n'
-  pure bs
+solve k = resultToBS <$> solverForProblem k
 
 main :: IO ()
 main = defaultMain =<< goldenTests
