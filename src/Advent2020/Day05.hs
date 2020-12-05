@@ -5,6 +5,7 @@ module Advent2020.Day05
 import qualified Data.Set as Set
 import qualified Data.List as List
 import Control.Monad (guard)
+import Data.Maybe (listToMaybe)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char)
 import Text.Parsec (many1, (<|>))
@@ -26,8 +27,8 @@ inputParser = linesOf seat
 seatId :: Seat -> Int
 seatId seat = row seat * 8 + col seat
 
-mySeatId :: [Seat] -> Int
-mySeatId seats = head $ do
+mySeatId :: [Seat] -> Maybe Int
+mySeatId seats = listToMaybe $ do
   let seatIds = map seatId . List.sort $ seats
   (a, b) <- zip seatIds . tail $ seatIds
   guard $ b - a == 2
@@ -37,7 +38,9 @@ printResults :: [Seat] -> PuzzleAnswerPair
 printResults seats = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . seatId . maximum $ seats
-    part2 = show . mySeatId $ seats
+    part2 = case mySeatId seats of
+              Nothing -> "No available seat"
+              Just mySeat -> show mySeat
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 5
