@@ -3,6 +3,7 @@ module Advent2020.Day05
   ) where
 
 import qualified Data.Set as Set
+import qualified Data.List as List
 import Control.Monad (guard)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char)
@@ -26,16 +27,11 @@ seatId :: Seat -> Int
 seatId seat = row seat * 8 + col seat
 
 mySeatId :: [Seat] -> Int
-mySeatId seats = mySeat
-  where
-    takenSeatIds = Set.fromList . map seatId $ seats
-    mySeat = head $ do
-      a <- seatId <$> seats
-      b <- seatId <$> seats
-      guard $ abs (a - b) == 2
-      let mySeatId = (a + b) `div` 2
-      guard . not . Set.member mySeatId $ takenSeatIds
-      pure mySeatId
+mySeatId seats = head $ do
+  let seatIds = map seatId . List.sort $ seats
+  (a, b) <- zip seatIds . tail $ seatIds
+  guard $ abs (a - b) == 2
+  pure $ (a + b) `div` 2
 
 printResults :: [Seat] -> PuzzleAnswerPair
 printResults seats = PuzzleAnswerPair (part1, part2)
