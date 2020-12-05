@@ -27,6 +27,7 @@ inputParser = linesOf seat
 pairs [] = []
 pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
 
+seatId :: Seat -> Int
 seatId (Seat (r, c)) = r * 8 + c
 
 mySeatId :: [Seat] -> Int
