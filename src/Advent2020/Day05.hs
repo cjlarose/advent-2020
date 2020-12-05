@@ -6,10 +6,9 @@ import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set
 import Data.Set (Set)
-import Data.Bits ((.|.), shiftL)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (char, string, alphaNum, endOfLine, digit, hexDigit)
-import Text.Parsec (many1, sepBy1, eof, (<|>), count, try, choice)
+import Text.Parsec.Char (char)
+import Text.Parsec (many1, (<|>))
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
