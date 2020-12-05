@@ -6,7 +6,6 @@ import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set
 import Data.Set (Set)
-import Data.Maybe (isJust)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, string, alphaNum, endOfLine, digit, hexDigit)
 import Text.Parsec (many1, sepBy1, eof, (<|>), count, try, choice)
