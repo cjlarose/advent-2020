@@ -30,8 +30,8 @@ mySeatId :: [Seat] -> Int
 mySeatId seats = head $ do
   let seatIds = map seatId . List.sort $ seats
   (a, b) <- zip seatIds . tail $ seatIds
-  guard $ abs (a - b) == 2
-  pure $ (a + b) `div` 2
+  guard $ b - a == 2
+  pure $ a + 1
 
 printResults :: [Seat] -> PuzzleAnswerPair
 printResults seats = PuzzleAnswerPair (part1, part2)
