@@ -4,7 +4,7 @@ import System.Environment (getArgs)
 import System.IO (hPutStrLn, stderr, putStrLn)
 import System.Exit (exitFailure)
 
-import Advent2020.Solve (solver)
+import Advent2020.Solve (solverForProblem)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
 main :: IO ()
@@ -13,7 +13,7 @@ main = do
   case args of
     [arg] -> do
       let n = read arg
-      result <- solver n
+      result <- solverForProblem n
       case result of
         Left err -> hPutStrLn stderr err >> exitFailure
         Right (PuzzleAnswerPair (part1, part2)) -> do

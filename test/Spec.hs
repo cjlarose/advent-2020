@@ -5,12 +5,12 @@ import Data.Binary.Put (runPut, putCharUtf8, putStringUtf8)
 import Test.Tasty (defaultMain, TestTree, testGroup)
 import Test.Tasty.Golden (goldenVsString, findByExtension)
 
-import Advent2020.Solve (solver)
+import Advent2020.Solve (solverForProblem)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
 solve :: Int -> IO LBS.ByteString
 solve k = do
-  res <- solver k
+  res <- solverForProblem k
   let bs = case res of
              Left err -> runPut $ putStringUtf8 err >> putCharUtf8 '\n'
              Right (PuzzleAnswerPair (part1, part2)) -> runPut $ do
