@@ -19,8 +19,8 @@ inputParser = sepBy1 stringSet endOfLine <* eof
   where
     stringSet = many1 (word <* space)
 
-numQuestions :: [String] -> Int
-numQuestions = Set.size . Set.unions . map Set.fromList
+numQuestionsAny :: [String] -> Int
+numQuestionsAny = Set.size . Set.unions . map Set.fromList
 
 numQuestionsAll :: [String] -> Int
 numQuestionsAll = Set.size . foldl Set.intersection (Set.fromList ['a'..'z']) . map Set.fromList
@@ -28,7 +28,7 @@ numQuestionsAll = Set.size . foldl Set.intersection (Set.fromList ['a'..'z']) . 
 printResults :: [[String]] -> PuzzleAnswerPair
 printResults groupAnswers = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . sum . (map numQuestions) $ groupAnswers
+    part1 = show . sum . (map numQuestionsAny) $ groupAnswers
     part2 = show . sum . (map numQuestionsAll) $ groupAnswers
 
 solve :: IO (Either String PuzzleAnswerPair)
