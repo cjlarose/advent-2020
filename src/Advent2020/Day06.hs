@@ -12,9 +12,7 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (word)
 
 inputParser :: Parser [[String]]
-inputParser = sepBy1 stringSet endOfLine <* eof
-  where
-    stringSet = many1 (word <* space)
+inputParser = sepBy1 (many1 (word <* space)) endOfLine <* eof
 
 numQuestionsAny :: [String] -> Int
 numQuestionsAny = Set.size . Set.unions . map Set.fromList
