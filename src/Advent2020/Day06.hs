@@ -2,17 +2,14 @@ module Advent2020.Day06
   ( solve
   ) where
 
-import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map)
 import qualified Data.Set as Set
-import Data.Set (Set)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (char, string, alphaNum, endOfLine, digit, hexDigit, space)
-import Text.Parsec (many1, sepBy1, eof, (<|>), count, try, choice)
+import Text.Parsec.Char (endOfLine, space)
+import Text.Parsec (many1, sepBy1, eof)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (nonNegativeInteger, word)
+import Advent.CommonParsers (word)
 
 inputParser :: Parser [[String]]
 inputParser = sepBy1 stringSet endOfLine <* eof
