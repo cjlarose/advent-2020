@@ -12,16 +12,17 @@ import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (word)
 
-type GroupAnswers = Set String
+type MemberYesAnswers = Set Char
+type GroupAnswers = Set MemberYesAnswers
 
 inputParser :: Parser [GroupAnswers]
-inputParser = sepBy1 (Set.fromList <$> many1 (word <* space)) endOfLine <* eof
+inputParser = sepBy1 (Set.fromList <$> many1 (Set.fromList <$> word <* space)) endOfLine <* eof
 
 numQuestionsAny :: GroupAnswers -> Int
-numQuestionsAny = Set.size . Set.unions . Set.map Set.fromList
+numQuestionsAny = Set.size . Set.unions
 
 numQuestionsAll :: GroupAnswers -> Int
-numQuestionsAll = Set.size . foldl Set.intersection (Set.fromList ['a'..'z']) . Set.map Set.fromList
+numQuestionsAll = Set.size . foldl Set.intersection (Set.fromList ['a'..'z'])
 
 printResults :: [GroupAnswers] -> PuzzleAnswerPair
 printResults groups = PuzzleAnswerPair (part1, part2)
