@@ -11,20 +11,22 @@ import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (word)
 
-inputParser :: Parser [[String]]
+type GroupAnswers = [String]
+
+inputParser :: Parser [GroupAnswers]
 inputParser = sepBy1 (many1 (word <* space)) endOfLine <* eof
 
-numQuestionsAny :: [String] -> Int
+numQuestionsAny :: GroupAnswers -> Int
 numQuestionsAny = Set.size . Set.unions . map Set.fromList
 
-numQuestionsAll :: [String] -> Int
+numQuestionsAll :: GroupAnswers -> Int
 numQuestionsAll = Set.size . foldl Set.intersection (Set.fromList ['a'..'z']) . map Set.fromList
 
-printResults :: [[String]] -> PuzzleAnswerPair
-printResults groupAnswers = PuzzleAnswerPair (part1, part2)
+printResults :: [GroupAnswers] -> PuzzleAnswerPair
+printResults groups = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . sum . map numQuestionsAny $ groupAnswers
-    part2 = show . sum . map numQuestionsAll $ groupAnswers
+    part1 = show . sum . map numQuestionsAny $ groups
+    part2 = show . sum . map numQuestionsAll $ groups
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 6
