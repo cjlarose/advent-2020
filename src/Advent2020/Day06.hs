@@ -28,8 +28,8 @@ numQuestionsAll = Set.size . foldl Set.intersection (Set.fromList ['a'..'z']) . 
 printResults :: [[String]] -> PuzzleAnswerPair
 printResults groupAnswers = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . sum . (map numQuestionsAny) $ groupAnswers
-    part2 = show . sum . (map numQuestionsAll) $ groupAnswers
+    part1 = show . sum . map numQuestionsAny $ groupAnswers
+    part2 = show . sum . map numQuestionsAll $ groupAnswers
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 6
