@@ -33,8 +33,8 @@ parentsOf :: [Rule] -> Color -> Set Color
 parentsOf rules x = Set.fromList $ go x
   where
     go y = do
-      parent <- map parent . filter (any (\(_, c) -> c == y) . children) $ rules
-      parent : go parent
+      p <- map parent . filter (any (\(_, c) -> c == y) . children) $ rules
+      p : go p
 
 countChildren :: [Rule] -> Color -> Int
 countChildren rules x = maybe 0 count rule
