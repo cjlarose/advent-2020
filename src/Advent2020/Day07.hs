@@ -2,13 +2,11 @@ module Advent2020.Day07
   ( solve
   ) where
 
-import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map)
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (char, string, alphaNum, endOfLine, digit, hexDigit, space)
-import Text.Parsec (many1, sepBy1, eof, (<|>), count, try, choice, option)
+import Text.Parsec.Char (char, string, space)
+import Text.Parsec (sepBy1, (<|>), count, try, option)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
