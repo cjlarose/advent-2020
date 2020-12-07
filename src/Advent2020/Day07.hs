@@ -30,9 +30,9 @@ inputParser = linesOf rule
 parentsOf :: [Rule] -> Color -> Set Color
 parentsOf rules x = Set.fromList $ go x
   where
-    go y = concat $ do
+    go y = do
       parent <- map parent . filter (\Rule{ children=children } -> any (\(_, c) -> c == y) children) $ rules
-      pure $ parent : go parent
+      parent : go parent
 
 countChildren :: [Rule] -> Color -> Int
 countChildren rules x = sum . map (\(k, y) -> k * (1 + countChildren rules y)) $ children rule
