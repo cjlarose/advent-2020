@@ -45,8 +45,9 @@ countChildren rules x = maybe 0 count rule
 printResults :: [Rule] -> PuzzleAnswerPair
 printResults rules = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . Set.size . parentsOf rules $ "shiny gold"
-    part2 = show $ countChildren rules "shiny gold"
+    myBag = "shiny gold"
+    part1 = show . Set.size . parentsOf rules $ myBag
+    part2 = show $ countChildren rules myBag
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 7
