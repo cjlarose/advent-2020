@@ -4,6 +4,8 @@ module Advent2020.Day07
 
 import qualified Data.Set as Set
 import Data.Set (Set)
+import Data.List (find)
+import Data.Maybe (maybe)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, string, space)
 import Text.Parsec (sepBy1, (<|>), count, try, option)
@@ -35,9 +37,9 @@ parentsOf rules x = Set.fromList $ go x
       parent : go parent
 
 countChildren :: [Rule] -> Color -> Int
-countChildren rules x = count rule
+countChildren rules x = maybe 0 count rule
   where
-    rule = head . filter (\Rule{ parent=parent } -> parent == x) $ rules
+    rule = find (\Rule{ parent=parent } -> parent == x) rules
     count = sum . map (\(k, y) -> k * (1 + countChildren rules y)) . children
 
 printResults :: [Rule] -> PuzzleAnswerPair
