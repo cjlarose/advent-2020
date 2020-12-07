@@ -22,7 +22,8 @@ inputParser = linesOf rule
   where
     token :: Parser String -> Parser String
     token p = p <* space
-    rule = (\p xs -> Rule { parent=p, children=xs }) <$> color <* token bagOrBags <* token (string "contain") <*> (try noBags <|> sepBy1 child (string ", ")) <* char '.'
+    rule = (\p xs -> Rule { parent=p, children=xs }) <$> color <* token bagOrBags <* token (string "contain") <*> requiredContents <* char '.'
+    requiredContents = try noBags <|> sepBy1 child (string ", ")
     noBags = [] <$ string "no other bags"
     color :: Parser String
     color = (\a b -> a ++ " " ++ b) <$> token word <*> token word
