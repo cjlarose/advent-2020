@@ -37,7 +37,7 @@ parentsOf rules x = Set.fromList $ go x
       pure $ parent : go parent
 
 countChildren :: [Rule] -> Color -> Int
-countChildren rules x = sum . map (\(k, y) -> k + (k * countChildren rules y)) $ children rule
+countChildren rules x = sum . map (\(k, y) -> k * (1 + countChildren rules y)) $ children rule
   where
     rule = head . filter (\(Rule { parent=parent }) -> parent == x) $ rules
 
