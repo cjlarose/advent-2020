@@ -30,7 +30,7 @@ inputParser = linesOf rule
     child = (\a b -> (a, b)) <$> nonNegativeInteger <* space <*> color <* bagOrBags
 
 allowedContainersFor :: [Rule] -> Color -> Set Color
-allowedContainersFor rules x = Set.fromList $ go x
+allowedContainersFor rules = Set.fromList . go
   where
     go y = do
       p <- map parent . filter (any (\(_, c) -> c == y) . children) $ rules
