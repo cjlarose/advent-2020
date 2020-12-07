@@ -35,9 +35,10 @@ parentsOf rules x = Set.fromList $ go x
       parent : go parent
 
 countChildren :: [Rule] -> Color -> Int
-countChildren rules x = sum . map (\(k, y) -> k * (1 + countChildren rules y)) $ children rule
+countChildren rules x = count rule
   where
     rule = head . filter (\Rule{ parent=parent } -> parent == x) $ rules
+    count = sum . map (\(k, y) -> k * (1 + countChildren rules y)) . children
 
 printResults :: [Rule] -> PuzzleAnswerPair
 printResults rules = PuzzleAnswerPair (part1, part2)
