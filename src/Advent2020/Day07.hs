@@ -33,13 +33,13 @@ parentsOf :: [Rule] -> Color -> Set Color
 parentsOf rules x = Set.fromList $ go x
   where
     go y = do
-      parent <- map parent . filter (\Rule{ children=children } -> any (\(_, c) -> c == y) children) $ rules
+      parent <- map parent . filter (any (\(_, c) -> c == y) . children) $ rules
       parent : go parent
 
 countChildren :: [Rule] -> Color -> Int
 countChildren rules x = maybe 0 count rule
   where
-    rule = find (\Rule{ parent=parent } -> parent == x) rules
+    rule = find ((==) x . parent) rules
     count = sum . map (\(k, y) -> k * (1 + countChildren rules y)) . children
 
 printResults :: [Rule] -> PuzzleAnswerPair
