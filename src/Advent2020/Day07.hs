@@ -36,11 +36,16 @@ parentsOf rules x = Set.fromList $ go x
       parent <- map parent . filter (\(Rule { children=children }) -> any (\(_, c) -> c == y) children) $ rules
       pure $ parent : go parent
 
+countChildren :: [Rule] -> Color -> Int
+countChildren rules x = sum . map (\(k, y) -> k + (k * countChildren rules y)) $ children rule
+  where
+    rule = head . filter (\(Rule { parent=parent }) -> parent == x) $ rules
+
 printResults :: [Rule] -> PuzzleAnswerPair
 printResults rules = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . Set.size . parentsOf rules $ "shiny gold"
-    part2 = "not implemented"
+    part2 = show $ countChildren rules "shiny gold"
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 7
