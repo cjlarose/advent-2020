@@ -29,8 +29,8 @@ inputParser = linesOf rule
     bagOrBags = string "bag" <* option ' ' (char 's')
     child = (\a b -> (a, b)) <$> nonNegativeInteger <* space <*> color <* bagOrBags
 
-parentsOf :: [Rule] -> Color -> Set Color
-parentsOf rules x = Set.fromList $ go x
+allowedContainersFor :: [Rule] -> Color -> Set Color
+allowedContainersFor rules x = Set.fromList $ go x
   where
     go y = do
       p <- map parent . filter (any (\(_, c) -> c == y) . children) $ rules
@@ -46,7 +46,7 @@ printResults :: [Rule] -> PuzzleAnswerPair
 printResults rules = PuzzleAnswerPair (part1, part2)
   where
     myBag = "shiny gold"
-    part1 = show . Set.size . parentsOf rules $ myBag
+    part1 = show . Set.size . allowedContainersFor rules $ myBag
     part2 = show $ countChildren rules myBag
 
 solve :: IO (Either String PuzzleAnswerPair)
