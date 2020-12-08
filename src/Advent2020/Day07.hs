@@ -27,7 +27,7 @@ inputParser = linesOf rule
     color :: Parser String
     color = (\a b -> a ++ " " ++ b) <$> token word <*> token word
     bagOrBags = string "bag" <* option ' ' (char 's')
-    child = (\a b -> (a, b)) <$> nonNegativeInteger <* space <*> color <* bagOrBags
+    child = (,) <$> nonNegativeInteger <* space <*> color <* bagOrBags
 
 allowedContainersFor :: [Rule] -> Color -> Set Color
 allowedContainersFor rules = Set.fromList . go
