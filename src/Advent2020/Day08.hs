@@ -47,18 +47,21 @@ runMachine' program = go program (MachineState 0 0) Set.empty False
                             | otherwise =
                                 case p !? pc state of
                                   Just (Acc x) -> go p (newState (Acc x)) (Set.insert (pc state) seen) flipped
-                                  Just original -> do
-                                    doFlip <- if flipped then [False] else [True, False]
-                                    instruction <- if doFlip
-                                                   then
-                                                     case original of
-                                                       Jmp x -> [Jmp x, Nop x]
-                                                       Nop x -> [Jmp x, Nop x]
-                                                   else
-                                                     pure original
-                                    let s = newState instruction
-                                    let newP = adjust' (const instruction) (pc state) p
-                                    go newP s (Set.insert (pc state) seen) $ flipped || doFlip
+                                  Just original ->
+                                    if flipped
+                                    then go p (newState original) (Set.insert (pc state) seen) flipped
+                                    else do
+                                      doFlip <- [True, False]
+                                      instruction <- if doFlip
+                                                     then
+                                                       case original of
+                                                         Jmp x -> [Jmp x, Nop x]
+                                                         Nop x -> [Jmp x, Nop x]
+                                                     else
+                                                       pure original
+                                      let s = newState instruction
+                                      let newP = adjust' (const instruction) (pc state) p
+                                      go newP s (Set.insert (pc state) seen) $ flipped || doFlip
       where
         newState :: Instruction -> MachineState
         newState instruction =
