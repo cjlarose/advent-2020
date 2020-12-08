@@ -45,12 +45,11 @@ runMachine' program = go program (MachineState 0 0) Set.empty False
     go p state seen flipped | pc state `Set.member` seen = [(LoopsForever, state)]
                             | pc state == Seq.length p = [(Terminated, state)]
                             | otherwise =
-                                case p !? pc state of
-                                  Just (Acc x) -> go p (newState (Acc x)) (Set.insert (pc state) seen) flipped
-                                  Just original ->
-                                    if flipped
-                                    then go p (newState original) (Set.insert (pc state) seen) flipped
-                                    else do
+                                case (flipped, p !? pc state) of
+                                  (_, Just inst@(Acc _)) -> go p (newState inst) (Set.insert (pc state) seen) flipped
+                                  (True, Just inst) -> go p (newState inst) (Set.insert (pc state) seen) flipped
+                                  (False, Just original) ->
+                                    do
                                       doFlip <- [True, False]
                                       if doFlip
                                       then do
