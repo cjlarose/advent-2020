@@ -17,6 +17,7 @@ import Advent.CommonParsers (integer, linesOf)
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 data FinalState = Terminated Int | LoopsForever Int
 type Program = Seq Instruction
+data MachineState = MachineState { acc :: Int, pc :: Int }
 
 inputParser :: Parser Program
 inputParser = Seq.fromList <$> linesOf (instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop)
@@ -24,17 +25,18 @@ inputParser = Seq.fromList <$> linesOf (instruction "acc" Acc <|> instruction "j
     instruction name f = f <$> ((string name *> space) *> integer)
 
 runMachine :: Program -> FinalState
-runMachine program = go 0 0 Set.empty
+runMachine program = go (MachineState 0 0) Set.empty
   where
-    go :: Int -> Int -> Set Int -> FinalState
-    go acc pc seen | pc `Set.member` seen = LoopsForever acc
-                   | pc == Seq.length program = Terminated acc
-                   | otherwise = go newAcc newPc (Set.insert pc seen)
+    go :: MachineState -> Set Int -> FinalState
+    go state seen | pc state `Set.member` seen = LoopsForever $ acc state
+                  | pc state == Seq.length program = Terminated $ acc state
+                  | otherwise = go newState . Set.insert (pc state) $ seen
       where
-        (newAcc, newPc) = case program !? pc of
-                            Just (Acc x) -> (acc + x, pc + 1)
-                            Just (Jmp x) -> (acc, pc + x)
-                            Just _ -> (acc, pc + 1)
+        newState :: MachineState
+        newState = case program !? pc state of
+                     Just (Acc x) -> state { acc = acc state + x, pc = pc state + 1 }
+                     Just (Jmp x) -> state { pc = pc state + x }
+                     Just _ -> state { pc = pc state + 1 }
 
 fixProgram :: Program -> Maybe Int
 fixProgram program = go 0
