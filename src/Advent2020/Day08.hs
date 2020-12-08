@@ -15,21 +15,21 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (integer, linesOf)
 
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
-data FinalState = Terminated Int | LoopsForever Int
 type Program = Seq Instruction
 data MachineState = MachineState { acc :: Int, pc :: Int }
+data FinalState = Terminated | LoopsForever
 
 inputParser :: Parser Program
 inputParser = Seq.fromList <$> linesOf (instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop)
   where
     instruction name f = f <$> ((string name *> space) *> integer)
 
-runMachine :: Program -> FinalState
+runMachine :: Program -> (FinalState, MachineState)
 runMachine program = go (MachineState 0 0) Set.empty
   where
-    go :: MachineState -> Set Int -> FinalState
-    go state seen | pc state `Set.member` seen = LoopsForever $ acc state
-                  | pc state == Seq.length program = Terminated $ acc state
+    go :: MachineState -> Set Int -> (FinalState, MachineState)
+    go state seen | pc state `Set.member` seen = (LoopsForever, state)
+                  | pc state == Seq.length program = (Terminated, state)
                   | otherwise = go newState . Set.insert (pc state) $ seen
       where
         newState :: MachineState
@@ -43,8 +43,8 @@ fixProgram program = go 0
   where
     go i | i >= Seq.length program = Nothing
          | otherwise = case runMachine $ adjust' swap i program of
-                         LoopsForever _ -> go (succ i)
-                         Terminated acc ->  Just acc
+                         (LoopsForever, _) -> go (succ i)
+                         (Terminated, state) ->  Just . acc $ state
     swap (Nop x) = Jmp x
     swap (Jmp x) = Nop x
     swap x = x
@@ -53,8 +53,8 @@ printResults :: Program -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
   where
     part1 = case runMachine program of
-              LoopsForever acc -> show acc
-              Terminated _ -> error "unexpectedly terminated"
+              (LoopsForever, state) -> show . acc $ state
+              (Terminated, _) -> error "unexpectedly terminated"
     part2 = case fixProgram program of
               Just acc -> show acc
               Nothing -> error "no fix found"
