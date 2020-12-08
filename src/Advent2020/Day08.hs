@@ -4,7 +4,8 @@ module Advent2020.Day08
 
 import qualified Data.Set as Set
 import Data.Set (Set)
-import Data.Sequence as Seq
+import qualified Data.Sequence as Seq
+import Data.Sequence (Seq, (!?), adjust')
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string, space)
 import Text.Parsec ((<|>))
