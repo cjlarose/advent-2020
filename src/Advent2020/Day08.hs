@@ -2,18 +2,15 @@ module Advent2020.Day08
   ( solve
   ) where
 
-import Data.Either (Either(..), fromLeft, fromRight, isRight)
-import Data.Maybe (fromJust)
 import qualified Data.Set as Set
 import Data.Set (Set)
-import Data.List (find)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (char, string, space)
-import Text.Parsec (sepBy1, (<|>), try, option)
+import Text.Parsec.Char (string, space)
+import Text.Parsec ((<|>))
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (integer, word, linesOf)
+import Advent.CommonParsers (integer, linesOf)
 
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 
