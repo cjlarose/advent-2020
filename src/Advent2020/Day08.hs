@@ -52,12 +52,12 @@ fixProgram program = go 0
                          Terminated acc ->  Just acc
 
 printResults :: Program -> PuzzleAnswerPair
-printResults instructions = PuzzleAnswerPair (part1, part2)
+printResults program = PuzzleAnswerPair (part1, part2)
   where
-    part1 = case runMachine instructions of
+    part1 = case runMachine program of
               LoopsForever acc -> show acc
               Terminated _ -> error "unexpectedly terminated"
-    part2 = case fixProgram instructions of
+    part2 = case fixProgram program of
               Just acc -> show acc
               Nothing -> error "no fix found"
 
