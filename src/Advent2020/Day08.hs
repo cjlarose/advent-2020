@@ -52,16 +52,14 @@ runMachine' program = go program (MachineState 0 0) Set.empty False
                                     then go p (newState original) (Set.insert (pc state) seen) flipped
                                     else do
                                       doFlip <- [True, False]
-                                      instruction <- if doFlip
-                                                     then
-                                                       case original of
-                                                         Jmp x -> [Jmp x, Nop x]
-                                                         Nop x -> [Jmp x, Nop x]
-                                                     else
-                                                       pure original
-                                      let s = newState instruction
-                                      let newP = adjust' (const instruction) (pc state) p
-                                      go newP s (Set.insert (pc state) seen) $ flipped || doFlip
+                                      if doFlip
+                                      then do
+                                        let adjusted (Jmp x) = Nop x
+                                            adjusted (Nop x) = Jmp x
+                                        let newP = adjust' adjusted (pc state) p
+                                        go p state seen True ++ go newP state seen True
+                                      else
+                                        go p (newState original) (Set.insert (pc state) seen) flipped
       where
         newState :: Instruction -> MachineState
         newState instruction =
