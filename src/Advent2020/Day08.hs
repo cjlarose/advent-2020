@@ -58,7 +58,7 @@ runMachine' program = go program (MachineState 0 0) Set.empty False
                                         let newP = adjust' adjusted (pc state) p
                                         go p state seen True ++ go newP state seen True
                                       else
-                                        go p (newState original) (Set.insert (pc state) seen) flipped
+                                        go p (newState original) (Set.insert (pc state) seen) False
       where
         newState :: Instruction -> MachineState
         newState instruction =
