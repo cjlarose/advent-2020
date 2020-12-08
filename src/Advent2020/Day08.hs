@@ -13,6 +13,7 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (integer, linesOf, token)
 
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
+data FinalState = Terminated Int | LoopsForever Int
 
 inputParser :: Parser [Instruction]
 inputParser = linesOf $ instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop
@@ -20,12 +21,12 @@ inputParser = linesOf $ instruction "acc" Acc <|> instruction "jmp" Jmp <|> inst
     mnemonic = token . string
     instruction name f = f <$> (mnemonic name *> integer)
 
-runMachine :: [Instruction] -> Either Int Int
+runMachine :: [Instruction] -> FinalState
 runMachine program = go 0 0 Set.empty
   where
-    go :: Int -> Int -> Set Int -> Either Int Int
-    go acc pc seen | pc `Set.member` seen = Left acc
-                   | pc == length program = Right acc
+    go :: Int -> Int -> Set Int -> FinalState
+    go acc pc seen | pc `Set.member` seen = LoopsForever acc
+                   | pc == length program = Terminated acc
                    | otherwise = go newAcc newPc (Set.insert pc seen)
       where
         (newAcc, newPc) = case program !! pc of
@@ -46,14 +47,14 @@ fixProgram :: [Instruction] -> Int
 fixProgram program = go 0
   where
     go i = case runMachine $ modifyProgram program i of
-             Left _ -> go (succ i)
-             Right acc ->  acc
+             LoopsForever _ -> go (succ i)
+             Terminated acc ->  acc
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults instructions = PuzzleAnswerPair (part1, part2)
   where
     part1 = case runMachine instructions of
-              Left acc -> show acc
+              LoopsForever acc -> show acc
               _ -> error "did not terminate"
     part2 = show . fixProgram $ instructions
 
