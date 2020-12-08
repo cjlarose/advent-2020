@@ -5,20 +5,18 @@ module Advent2020.Day08
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (string, space)
+import Text.Parsec.Char (string)
 import Text.Parsec ((<|>))
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (integer, linesOf)
+import Advent.CommonParsers (integer, linesOf, token)
 
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 
 inputParser :: Parser [Instruction]
 inputParser = linesOf instruction
   where
-    token :: Parser String -> Parser String
-    token p = p <* space
     mnemonic = token . string
     instruction :: Parser Instruction
     instruction = (Acc <$> (mnemonic "acc" *> integer)) <|> (Jmp <$> (mnemonic "jmp" *> integer)) <|> (Nop <$> (mnemonic "nop" *> integer))
