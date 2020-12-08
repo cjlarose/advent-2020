@@ -46,7 +46,7 @@ modifyProgram xs i = case xs !! i of
 fixProgram :: [Instruction] -> Maybe Int
 fixProgram program = go 0
   where
-    go i | i > length program = Nothing
+    go i | i >= length program = Nothing
          | otherwise = case runMachine $ modifyProgram program i of
                          LoopsForever _ -> go (succ i)
                          Terminated acc ->  Just acc
