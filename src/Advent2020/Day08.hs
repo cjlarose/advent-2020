@@ -4,8 +4,9 @@ module Advent2020.Day08
 
 import qualified Data.Set as Set
 import Data.Set (Set)
+import Data.List (find)
 import qualified Data.Sequence as Seq
-import Data.Sequence (Seq, (!?), adjust')
+import Data.Sequence (Seq, (!?))
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string, space)
 import Text.Parsec ((<|>))
@@ -38,16 +39,38 @@ runMachine program = go (MachineState 0 0) Set.empty
                      Just (Jmp x) -> state { pc = pc state + x }
                      Just _ -> state { pc = pc state + 1 }
 
-fixProgram :: Program -> Maybe Int
-fixProgram program = go 0
+runMachine' :: Program -> [(FinalState, MachineState)]
+runMachine' program = go (MachineState 0 0) Set.empty False
   where
-    go i | i >= Seq.length program = Nothing
-         | otherwise = case runMachine $ adjust' swap i program of
-                         (LoopsForever, _) -> go (succ i)
-                         (Terminated, state) ->  Just . acc $ state
-    swap (Nop x) = Jmp x
-    swap (Jmp x) = Nop x
-    swap x = x
+    go :: MachineState -> Set Int -> Bool -> [(FinalState, MachineState)]
+    go state seen flipped | pc state `Set.member` seen = [(LoopsForever, state)]
+                          | pc state == Seq.length program = [(Terminated, state)]
+                          | otherwise = do
+                              doFlip <- if flipped then [False] else [True, False]
+                              instruction <- if doFlip
+                                             then
+                                               case program !? pc state of
+                                                 Just (Jmp x) -> [Jmp x, Nop x]
+                                                 Just (Nop x) -> [Jmp x, Nop x]
+                                                 Just x -> pure x
+                                             else
+                                               maybe [] pure $ program !? pc state
+                              let s = newState instruction
+                              go s (Set.insert (pc state) seen) $ flipped || doFlip
+      where
+        newState :: Instruction -> MachineState
+        newState instruction =
+          case instruction of
+            Acc x -> state { acc = acc state + x, pc = pc state + 1 }
+            Jmp x -> state { pc = pc state + x }
+            _ -> state { pc = pc state + 1 }
+
+fixProgram :: Program -> Maybe Int
+fixProgram = go . runMachine'
+  where
+    go [] = Nothing
+    go ((Terminated, s):_) = Just . acc $ s
+    go ((_, _):xs) = go xs
 
 printResults :: Program -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
