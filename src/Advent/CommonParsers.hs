@@ -15,7 +15,9 @@ nonNegativeInteger :: Parser Int
 nonNegativeInteger = read <$> many1 digit
 
 integer :: Parser Int
-integer = (*) <$> option 1 ((-1 <$ char '-') <|> (1 <$ char '+')) <*> nonNegativeInteger
+integer = (*) <$> option 1 sign <*> nonNegativeInteger
+  where
+    sign = (-1 <$ char '-') <|> (1 <$ char '+')
 
 linesOf :: Parser a -> Parser [a]
 linesOf p = sepEndBy1 p endOfLine <* eof
