@@ -15,11 +15,10 @@ import Advent.CommonParsers (integer, linesOf, token)
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 
 inputParser :: Parser [Instruction]
-inputParser = linesOf instruction
+inputParser = linesOf $ instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop
   where
     mnemonic = token . string
-    instruction :: Parser Instruction
-    instruction = (Acc <$> (mnemonic "acc" *> integer)) <|> (Jmp <$> (mnemonic "jmp" *> integer)) <|> (Nop <$> (mnemonic "nop" *> integer))
+    instruction name f = f <$> (mnemonic name *> integer)
 
 runMachine :: [Instruction] -> Either Int Int
 runMachine program = go 0 0 Set.empty
