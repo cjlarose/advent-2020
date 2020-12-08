@@ -5,7 +5,7 @@ module Advent2020.Day08
 import qualified Data.Set as Set
 import Data.Set (Set)
 import qualified Data.Sequence as Seq
-import Data.Sequence (Seq, (!?))
+import Data.Sequence (Seq, (!?), adjust')
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string, space)
 import Text.Parsec ((<|>))
@@ -39,25 +39,26 @@ runMachine program = go (MachineState 0 0) Set.empty
                      Just _ -> state { pc = pc state + 1 }
 
 runMachine' :: Program -> [(FinalState, MachineState)]
-runMachine' program = go (MachineState 0 0) Set.empty False
+runMachine' program = go program (MachineState 0 0) Set.empty False
   where
-    go :: MachineState -> Set Int -> Bool -> [(FinalState, MachineState)]
-    go state seen flipped | pc state `Set.member` seen = [(LoopsForever, state)]
-                          | pc state == Seq.length program = [(Terminated, state)]
-                          | otherwise =
-                              case program !? pc state of
-                                Just (Acc x) -> go (newState (Acc x)) (Set.insert (pc state) seen) flipped
-                                Just original -> do
-                                  doFlip <- if flipped then [False] else [True, False]
-                                  instruction <- if doFlip
-                                                 then
-                                                   case original of
-                                                     Jmp x -> [Jmp x, Nop x]
-                                                     Nop x -> [Jmp x, Nop x]
-                                                 else
-                                                   pure original
-                                  let s = newState instruction
-                                  go s (Set.insert (pc state) seen) $ flipped || doFlip
+    go :: Program -> MachineState -> Set Int -> Bool -> [(FinalState, MachineState)]
+    go p state seen flipped | pc state `Set.member` seen = [(LoopsForever, state)]
+                            | pc state == Seq.length p = [(Terminated, state)]
+                            | otherwise =
+                                case p !? pc state of
+                                  Just (Acc x) -> go p (newState (Acc x)) (Set.insert (pc state) seen) flipped
+                                  Just original -> do
+                                    doFlip <- if flipped then [False] else [True, False]
+                                    instruction <- if doFlip
+                                                   then
+                                                     case original of
+                                                       Jmp x -> [Jmp x, Nop x]
+                                                       Nop x -> [Jmp x, Nop x]
+                                                   else
+                                                     pure original
+                                    let s = newState instruction
+                                    let newP = adjust' (const instruction) (pc state) p
+                                    go newP s (Set.insert (pc state) seen) $ flipped || doFlip
       where
         newState :: Instruction -> MachineState
         newState instruction =
