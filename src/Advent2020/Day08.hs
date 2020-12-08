@@ -70,7 +70,7 @@ fixProgram = go . runMachine'
   where
     go [] = Nothing
     go ((Terminated, s):_) = Just . acc $ s
-    go ((_, _):xs) = go xs
+    go (_:xs) = go xs
 
 printResults :: Program -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
