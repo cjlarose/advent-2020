@@ -44,18 +44,20 @@ runMachine' program = go (MachineState 0 0) Set.empty False
     go :: MachineState -> Set Int -> Bool -> [(FinalState, MachineState)]
     go state seen flipped | pc state `Set.member` seen = [(LoopsForever, state)]
                           | pc state == Seq.length program = [(Terminated, state)]
-                          | otherwise = do
-                              doFlip <- if flipped then [False] else [True, False]
-                              instruction <- if doFlip
-                                             then
-                                               case program !? pc state of
-                                                 Just (Jmp x) -> [Jmp x, Nop x]
-                                                 Just (Nop x) -> [Jmp x, Nop x]
-                                                 Just x -> pure x
-                                             else
-                                               maybe [] pure $ program !? pc state
-                              let s = newState instruction
-                              go s (Set.insert (pc state) seen) $ flipped || doFlip
+                          | otherwise =
+                              case program !? pc state of
+                                Just (Acc x) -> go (newState (Acc x)) (Set.insert (pc state) seen) flipped
+                                Just original -> do
+                                  doFlip <- if flipped then [False] else [True, False]
+                                  instruction <- if doFlip
+                                                 then
+                                                   case original of
+                                                     Jmp x -> [Jmp x, Nop x]
+                                                     Nop x -> [Jmp x, Nop x]
+                                                 else
+                                                   pure original
+                                  let s = newState instruction
+                                  go s (Set.insert (pc state) seen) $ flipped || doFlip
       where
         newState :: Instruction -> MachineState
         newState instruction =
