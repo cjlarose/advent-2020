@@ -56,7 +56,7 @@ printResults instructions = PuzzleAnswerPair (part1, part2)
   where
     part1 = case runMachine instructions of
               LoopsForever acc -> show acc
-              _ -> error "did not terminate"
+              Terminated _ -> error "unexpectedly terminated"
     part2 = case fixProgram instructions of
               Just acc -> show acc
               Nothing -> error "no fix found"
