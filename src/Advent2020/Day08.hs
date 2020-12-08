@@ -36,20 +36,16 @@ runMachine program = go 0 0 Set.empty
                             Just (Jmp x) -> (acc, pc + x)
                             Just _ -> (acc, pc + 1)
 
-modifyProgram :: Program -> Int -> Program
-modifyProgram xs i = adjust' swap i xs
-  where
-    swap (Nop x) = Jmp x
-    swap (Jmp x) = Nop x
-    swap x = x
-
 fixProgram :: Program -> Maybe Int
 fixProgram program = go 0
   where
     go i | i >= Seq.length program = Nothing
-         | otherwise = case runMachine $ modifyProgram program i of
+         | otherwise = case runMachine $ adjust' swap i program of
                          LoopsForever _ -> go (succ i)
                          Terminated acc ->  Just acc
+    swap (Nop x) = Jmp x
+    swap (Jmp x) = Nop x
+    swap x = x
 
 printResults :: Program -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
