@@ -14,14 +14,15 @@ import Advent.CommonParsers (integer, linesOf, token)
 
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 data FinalState = Terminated Int | LoopsForever Int
+type Program = [Instruction]
 
-inputParser :: Parser [Instruction]
+inputParser :: Parser Program
 inputParser = linesOf $ instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop
   where
     mnemonic = token . string
     instruction name f = f <$> (mnemonic name *> integer)
 
-runMachine :: [Instruction] -> FinalState
+runMachine :: Program -> FinalState
 runMachine program = go 0 0 Set.empty
   where
     go :: Int -> Int -> Set Int -> FinalState
@@ -35,7 +36,7 @@ runMachine program = go 0 0 Set.empty
                              _ -> (acc, pc + 1)
 
 
-modifyProgram :: [Instruction] -> Int -> [Instruction]
+modifyProgram :: Program -> Int -> Program
 modifyProgram xs i = case xs !! i of
                        Acc _ -> xs
                        Jmp x -> replace i (Nop x) xs
@@ -43,7 +44,7 @@ modifyProgram xs i = case xs !! i of
   where
     replace i x xs = take i xs ++ [x] ++ drop (i + 1) xs
 
-fixProgram :: [Instruction] -> Maybe Int
+fixProgram :: Program -> Maybe Int
 fixProgram program = go 0
   where
     go i | i >= length program = Nothing
@@ -51,7 +52,7 @@ fixProgram program = go 0
                          LoopsForever _ -> go (succ i)
                          Terminated acc ->  Just acc
 
-printResults :: [Instruction] -> PuzzleAnswerPair
+printResults :: Program -> PuzzleAnswerPair
 printResults instructions = PuzzleAnswerPair (part1, part2)
   where
     part1 = case runMachine instructions of
