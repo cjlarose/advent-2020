@@ -5,10 +5,9 @@ module Advent2020.Day07
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.List (find)
-import Data.Maybe (maybe)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, string, space)
-import Text.Parsec (sepBy1, (<|>), count, try, option)
+import Text.Parsec (sepBy1, (<|>), try, option)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
