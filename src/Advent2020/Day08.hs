@@ -5,12 +5,12 @@ module Advent2020.Day08
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (string)
+import Text.Parsec.Char (string, space)
 import Text.Parsec ((<|>))
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (integer, linesOf, token)
+import Advent.CommonParsers (integer, linesOf)
 
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 data FinalState = Terminated Int | LoopsForever Int
@@ -19,8 +19,7 @@ type Program = [Instruction]
 inputParser :: Parser Program
 inputParser = linesOf $ instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop
   where
-    mnemonic = token . string
-    instruction name f = f <$> (mnemonic name *> integer)
+    instruction name f = f <$> ((string name *> space) *> integer)
 
 runMachine :: Program -> FinalState
 runMachine program = go 0 0 Set.empty
