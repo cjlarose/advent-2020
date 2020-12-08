@@ -43,12 +43,13 @@ modifyProgram xs i = case xs !! i of
   where
     replace i x xs = take i xs ++ [x] ++ drop (i + 1) xs
 
-fixProgram :: [Instruction] -> Int
+fixProgram :: [Instruction] -> Maybe Int
 fixProgram program = go 0
   where
-    go i = case runMachine $ modifyProgram program i of
-             LoopsForever _ -> go (succ i)
-             Terminated acc ->  acc
+    go i | i > length program = Nothing
+         | otherwise = case runMachine $ modifyProgram program i of
+                         LoopsForever _ -> go (succ i)
+                         Terminated acc ->  Just acc
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults instructions = PuzzleAnswerPair (part1, part2)
@@ -56,7 +57,9 @@ printResults instructions = PuzzleAnswerPair (part1, part2)
     part1 = case runMachine instructions of
               LoopsForever acc -> show acc
               _ -> error "did not terminate"
-    part2 = show . fixProgram $ instructions
+    part2 = case fixProgram instructions of
+              Just acc -> show acc
+              Nothing -> error "no fix found"
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 8
