@@ -26,9 +26,9 @@ invalidEntry ints = go . zip candidates $ prefixes
     go [] = Nothing
 
 subsequenceSum :: Int -> [Int] -> Maybe Int
-subsequenceSum k xs = (\s -> maximum s + minimum s) <$> seq
-  where
-    seq = find ((== k) . sum) . filter (\s -> length s >= 2) . subLists $ xs
+subsequenceSum k xs = do
+  seq <- find ((== k) . sum) . filter (\s -> length s >= 2) . subLists $ xs
+  pure $ maximum seq + minimum seq
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults ints = PuzzleAnswerPair (part1, part2)
