@@ -36,7 +36,7 @@ passportsP = sepBy1 passport endOfLine <* eof
     passport = Map.fromList <$> many1 field
     token :: Parser String -> Parser String
     token p = p <* space
-    fieldType key p = (\a b -> (a, b)) <$> try (string key <* char ':') <*> (try (Valid <$ token p) <|> (Invalid <$ token word))
+    fieldType key p = (,) <$> try (string key <* char ':') <*> (try (Valid <$ token p) <|> (Invalid <$ token word))
     nonNegativeDecimalIntegerInRange min max = do
       val <- nonNegativeInteger
       if val >= min && val <= max
