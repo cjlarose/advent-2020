@@ -38,7 +38,7 @@ printResults seats = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . seatId . maximum $ seats
     part2 = case mySeatId seats of
-              Nothing -> "No available seat"
+              Nothing -> error "No available seat"
               Just mySeat -> show mySeat
 
 solve :: IO (Either String PuzzleAnswerPair)
