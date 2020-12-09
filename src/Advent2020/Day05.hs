@@ -2,7 +2,6 @@ module Advent2020.Day05
   ( solve
   ) where
 
-import qualified Data.Set as Set
 import qualified Data.List as List
 import Control.Monad (guard)
 import Data.Maybe (listToMaybe)
