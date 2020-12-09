@@ -20,6 +20,9 @@ pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
 constructableFromPreamble :: [Int] -> Int -> Bool
 constructableFromPreamble preamble k = isJust . find (\(a, b) -> a + b == k) . pairs $ preamble
 
+invalidEntry :: [Int] -> Maybe Int
+invalidEntry ints = fst <$> (find (not . snd) $ zipWith (\k prev25 -> (k, constructableFromPreamble prev25 k)) (drop 25 ints) (map (\i -> take 25 . drop i $ ints) [0..]))
+
 subsequenceSum :: Int -> [Int] -> Maybe Int
 subsequenceSum k xs = (\s -> maximum s + minimum s) <$> seq
   where
@@ -32,11 +35,16 @@ subsequenceSum k xs = (\s -> maximum s + minimum s) <$> seq
 printResults :: [Int] -> PuzzleAnswerPair
 printResults ints = PuzzleAnswerPair (part1, part2)
   where
-    invalid = head . map fst . filter (not . snd) $ zipWith (\k prev25 -> (k, constructableFromPreamble prev25 k)) (drop 25 ints) (map (\i -> take 25 . drop i $ ints) [0..])
-    part1 = show invalid
-    part2 = case subsequenceSum invalid ints of
-              Just val -> show val
-              Nothing -> error "no subsequence found"
+    res = invalidEntry ints
+    (part1, part2) =
+      case res of
+        Nothing -> error "no invalid entry found"
+        Just invalid -> (p1, p2)
+          where
+            p1 = show invalid
+            p2 = case subsequenceSum invalid ints of
+                      Just val -> show val
+                      Nothing -> error "no subsequence found"
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 9
