@@ -21,7 +21,13 @@ constructableFromPreamble :: [Int] -> Int -> Bool
 constructableFromPreamble preamble k = isJust . find (\(a, b) -> a + b == k) . pairs $ preamble
 
 invalidEntry :: [Int] -> Maybe Int
-invalidEntry ints = fst <$> (find (not . snd) $ zipWith (\k prev25 -> (k, constructableFromPreamble prev25 k)) (drop 25 ints) (map (\i -> take 25 . drop i $ ints) [0..]))
+invalidEntry ints = go . zip candidates $ prefixes
+  where
+    candidates = drop 25 ints
+    prefixes = map (\i -> take 25 . drop i $ ints) [0..]
+    go ((k, preamble):xs) | not . constructableFromPreamble preamble $ k = Just k
+                          | otherwise = go xs
+    go [] = Nothing
 
 subsequenceSum :: Int -> [Int] -> Maybe Int
 subsequenceSum k xs = (\s -> maximum s + minimum s) <$> seq
