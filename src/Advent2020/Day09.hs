@@ -3,7 +3,6 @@ module Advent2020.Day09
   ) where
 
 import Data.List (find)
-import Data.Maybe (isJust)
 import Text.Parsec.ByteString (Parser)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
@@ -15,7 +14,7 @@ inputParser :: Parser [Int]
 inputParser = linesOf integer
 
 constructableFromPreamble :: [Int] -> Int -> Bool
-constructableFromPreamble preamble k = isJust . find (\(a, b) -> a + b == k) . pairs $ preamble
+constructableFromPreamble preamble k = any (\(a, b) -> a + b == k) . pairs $ preamble
 
 invalidEntry :: [Int] -> Maybe Int
 invalidEntry ints = go . zip candidates $ prefixes
