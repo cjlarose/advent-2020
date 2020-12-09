@@ -34,7 +34,7 @@ subsequenceSum k xs = (\s -> maximum s + minimum s) <$> seq
   where
     seq = go 2
     go seqLen | seqLen > length xs = Nothing
-              | otherwise = case find ((== k) . sum) (map (\i -> take seqLen . drop i $ xs) [0..length xs]) of
+              | otherwise = case find ((== k) . sum) (map (\i -> take seqLen . drop i $ xs) [0..length xs - 1 - seqLen]) of
                               Nothing -> go . succ $ seqLen
                               Just seq -> Just seq
 
