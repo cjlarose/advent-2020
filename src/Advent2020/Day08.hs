@@ -26,8 +26,8 @@ inputParser = Seq.fromList <$> linesOf (instruction "acc" Acc <|> instruction "j
   where
     instruction name f = f <$> ((string name *> space) *> integer)
 
-newState :: Instruction -> MachineState -> MachineState
-newState instruction state =
+executeInstruction :: Instruction -> MachineState -> MachineState
+executeInstruction instruction state =
   case instruction of
     Acc x -> state { acc = acc state + x, pc = pc state + 1 }
     Jmp x -> state { pc = pc state + x }
@@ -38,7 +38,7 @@ runMachine program = go (MachineState 0 0) Set.empty
   where
     go state seen | pc state `Set.member` seen = Just state
                   | pc state == Seq.length program = Nothing -- terminated
-                  | otherwise = go (newState (fromJust $ program !? pc state) state) . Set.insert (pc state) $ seen
+                  | otherwise = go (executeInstruction (fromJust $ program !? pc state) state) . Set.insert (pc state) $ seen
 
 runMachine' :: Program -> [MachineState]
 runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminated advance (Running, program, MachineState 0 0, Set.empty, False)
@@ -53,9 +53,9 @@ runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminate
       | pc st `Set.member` sn = []
       | pc st == length p = [(Done, p, st, sn, flp)]
       | flp = case p !? pc st of
-                Just inst -> [(Running, p, newState inst st, Set.insert (pc st) sn, flp)]
+                Just inst -> [(Running, p, executeInstruction inst st, Set.insert (pc st) sn, flp)]
       | otherwise = case p !? pc st of
-                      Just inst@(Acc _) -> [(Running, p, newState inst st, Set.insert (pc st) sn, flp)]
+                      Just inst@(Acc _) -> [(Running, p, executeInstruction inst st, Set.insert (pc st) sn, flp)]
                       Just original -> do
                         doFlip <- [True, False]
                         if doFlip
@@ -65,7 +65,7 @@ runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminate
                           let newP = adjust' adjusted (pc st) p
                           [(Running, p, st, sn, True), (Running, newP, st, sn, True)]
                         else
-                          [(Running, p, newState original st, Set.insert (pc st) sn, False)]
+                          [(Running, p, executeInstruction original st, Set.insert (pc st) sn, False)]
 
 
 fixProgram :: Program -> Maybe Int
