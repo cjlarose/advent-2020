@@ -3,7 +3,6 @@ module Advent2020.Day01
   ) where
 
 import qualified Data.Set as Set
-import Data.Set (Set)
 import Control.Monad (guard)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
