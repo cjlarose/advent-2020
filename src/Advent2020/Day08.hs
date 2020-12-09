@@ -6,7 +6,7 @@ import qualified Data.Set as Set
 import Data.Set (Set)
 import qualified Data.Sequence as Seq
 import Data.Sequence (Seq, (!?), adjust')
-import Data.Maybe (listToMaybe)
+import Data.Maybe (listToMaybe, fromJust)
 import Control.Monad.Loops (iterateUntilM)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string, space)
@@ -27,19 +27,20 @@ inputParser = Seq.fromList <$> linesOf (instruction "acc" Acc <|> instruction "j
   where
     instruction name f = f <$> ((string name *> space) *> integer)
 
+newState :: Instruction -> MachineState -> MachineState
+newState instruction state =
+  case instruction of
+    Acc x -> state { acc = acc state + x, pc = pc state + 1 }
+    Jmp x -> state { pc = pc state + x }
+    _ -> state { pc = pc state + 1 }
+
 runMachine :: Program -> (FinalState, MachineState)
 runMachine program = go (MachineState 0 0) Set.empty
   where
     go :: MachineState -> Set Int -> (FinalState, MachineState)
     go state seen | pc state `Set.member` seen = (LoopsForever, state)
                   | pc state == Seq.length program = (Terminated, state)
-                  | otherwise = go newState . Set.insert (pc state) $ seen
-      where
-        newState :: MachineState
-        newState = case program !? pc state of
-                     Just (Acc x) -> state { acc = acc state + x, pc = pc state + 1 }
-                     Just (Jmp x) -> state { pc = pc state + x }
-                     Just _ -> state { pc = pc state + 1 }
+                  | otherwise = go (newState (fromJust $ program !? pc state) state) . Set.insert (pc state) $ seen
 
 runMachine' :: Program -> [MachineState]
 runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminated advance (Running, program, MachineState 0 0, Set.empty, False)
@@ -67,12 +68,6 @@ runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminate
                                                      else
                                                        [(Running, p, newState original st, Set.insert (pc st) sn, False)]
 
-    newState :: Instruction -> MachineState -> MachineState
-    newState instruction state =
-      case instruction of
-        Acc x -> state { acc = acc state + x, pc = pc state + 1 }
-        Jmp x -> state { pc = pc state + x }
-        _ -> state { pc = pc state + 1 }
 
 fixProgram :: Program -> Maybe Int
 fixProgram = listToMaybe . map acc . runMachine'
