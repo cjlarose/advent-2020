@@ -19,7 +19,6 @@ import Advent.CommonParsers (integer, linesOf)
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 type Program = Seq Instruction
 data MachineState = MachineState { acc :: Int, pc :: Int }
-data FinalState = Terminated | LoopsForever
 data Status = Running | Done deriving (Eq)
 
 inputParser :: Parser Program
@@ -34,12 +33,11 @@ newState instruction state =
     Jmp x -> state { pc = pc state + x }
     _ -> state { pc = pc state + 1 }
 
-runMachine :: Program -> (FinalState, MachineState)
+runMachine :: Program -> Maybe MachineState
 runMachine program = go (MachineState 0 0) Set.empty
   where
-    go :: MachineState -> Set Int -> (FinalState, MachineState)
-    go state seen | pc state `Set.member` seen = (LoopsForever, state)
-                  | pc state == Seq.length program = (Terminated, state)
+    go state seen | pc state `Set.member` seen = Just state
+                  | pc state == Seq.length program = Nothing -- terminated
                   | otherwise = go (newState (fromJust $ program !? pc state) state) . Set.insert (pc state) $ seen
 
 runMachine' :: Program -> [MachineState]
@@ -76,8 +74,8 @@ printResults :: Program -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
   where
     part1 = case runMachine program of
-              (LoopsForever, state) -> show . acc $ state
-              (Terminated, _) -> error "unexpectedly terminated"
+              Just state -> show . acc $ state
+              Nothing -> error "unexpectedly terminated"
     part2 = case fixProgram program of
               Just acc -> show acc
               Nothing -> error "no fix found"
