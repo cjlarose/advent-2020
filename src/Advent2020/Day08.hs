@@ -41,11 +41,13 @@ runMachine program = go (MachineState 0 0) Set.empty
                   | otherwise = go (executeInstruction (fromJust $ program !? pc state) state) . Set.insert (pc state) $ seen
 
 runMachine' :: Program -> [MachineState]
-runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminated advance (Running, program, MachineState 0 0, Set.empty, False)
+runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminated advance init
   where
     terminated :: (Status, Program, MachineState, Set Int, Bool) -> Bool
     terminated (Done, _, _, _, _) = True
     terminated _ = False
+
+    init = (Running, program, MachineState 0 0, Set.empty, False)
 
     advance :: (Status, Program, MachineState, Set Int, Bool) -> [(Status, Program, MachineState, Set Int, Bool)]
     advance m@(ss, p, st, sn, flp)
