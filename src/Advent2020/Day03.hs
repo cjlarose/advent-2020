@@ -28,7 +28,7 @@ numTreesOnSlope Slope { di=di, dj=dj } = numTrees 0 0
       where newCount = case line !! j of
                          Tree -> 1 + acc
                          OpenSquare -> acc
-    numTrees j acc _ = acc
+    numTrees _ acc _ = acc
 
 printResults :: TreeMap -> PuzzleAnswerPair
 printResults lines = PuzzleAnswerPair (part1, part2)
