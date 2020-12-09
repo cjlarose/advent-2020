@@ -17,6 +17,12 @@ pairs :: [Int] -> [(Int, Int)]
 pairs [] = []
 pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
 
+subLists :: [Int] -> [[Int]]
+subLists xs = go 0
+  where
+    go seqLen | seqLen > length xs = []
+              | otherwise = map (\i -> take seqLen . drop i $ xs) [0..length xs - 1 - seqLen]  ++ go (succ seqLen)
+
 constructableFromPreamble :: [Int] -> Int -> Bool
 constructableFromPreamble preamble k = isJust . find (\(a, b) -> a + b == k) . pairs $ preamble
 
@@ -32,11 +38,7 @@ invalidEntry ints = go . zip candidates $ prefixes
 subsequenceSum :: Int -> [Int] -> Maybe Int
 subsequenceSum k xs = (\s -> maximum s + minimum s) <$> seq
   where
-    seq = go 2
-    go seqLen | seqLen > length xs = Nothing
-              | otherwise = case find ((== k) . sum) (map (\i -> take seqLen . drop i $ xs) [0..length xs - 1 - seqLen]) of
-                              Nothing -> go . succ $ seqLen
-                              Just seq -> Just seq
+    seq = find ((== k) . sum) . filter (\s -> length s >= 2) . subLists $ xs
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults ints = PuzzleAnswerPair (part1, part2)
