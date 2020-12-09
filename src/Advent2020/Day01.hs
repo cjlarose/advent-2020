@@ -9,10 +9,7 @@ import Control.Monad (guard)
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (listOfNonNegativeIntegers)
-
-pairs :: [Int] -> [(Int, Int)]
-pairs [] = []
-pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
+import Advent.ListUtils (pairs)
 
 productOfSpecialPair :: [Int] -> Int
 productOfSpecialPair entries = x * y
