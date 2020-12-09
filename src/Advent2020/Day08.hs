@@ -48,23 +48,24 @@ runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminate
     terminated _ = False
 
     advance :: (Status, Program, MachineState, Set Int, Bool) -> [(Status, Program, MachineState, Set Int, Bool)]
-    advance m@(ss, p, st, sn, flp) | ss == Done = [m]
-                                   | pc st `Set.member` sn = []
-                                   | pc st == length p = [(Done, p, st, sn, flp)]
-                                   | flp = case p !? pc st of
-                                             Just inst -> [(Running, p, newState inst st, Set.insert (pc st) sn, flp)]
-                                   | otherwise = case p !? pc st of
-                                                   Just inst@(Acc _) -> [(Running, p, newState inst st, Set.insert (pc st) sn, flp)]
-                                                   Just original -> do
-                                                     doFlip <- [True, False]
-                                                     if doFlip
-                                                     then do
-                                                       let adjusted (Jmp x) = Nop x
-                                                           adjusted (Nop x) = Jmp x
-                                                       let newP = adjust' adjusted (pc st) p
-                                                       [(Running, p, st, sn, True), (Running, newP, st, sn, True)]
-                                                     else
-                                                       [(Running, p, newState original st, Set.insert (pc st) sn, False)]
+    advance m@(ss, p, st, sn, flp)
+      | ss == Done = [m]
+      | pc st `Set.member` sn = []
+      | pc st == length p = [(Done, p, st, sn, flp)]
+      | flp = case p !? pc st of
+                Just inst -> [(Running, p, newState inst st, Set.insert (pc st) sn, flp)]
+      | otherwise = case p !? pc st of
+                      Just inst@(Acc _) -> [(Running, p, newState inst st, Set.insert (pc st) sn, flp)]
+                      Just original -> do
+                        doFlip <- [True, False]
+                        if doFlip
+                        then do
+                          let adjusted (Jmp x) = Nop x
+                              adjusted (Nop x) = Jmp x
+                          let newP = adjust' adjusted (pc st) p
+                          [(Running, p, st, sn, True), (Running, newP, st, sn, True)]
+                        else
+                          [(Running, p, newState original st, Set.insert (pc st) sn, False)]
 
 
 fixProgram :: Program -> Maybe Int
