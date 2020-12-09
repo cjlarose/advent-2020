@@ -6,6 +6,8 @@ import qualified Data.Set as Set
 import Data.Set (Set)
 import qualified Data.Sequence as Seq
 import Data.Sequence (Seq, (!?), adjust')
+import Data.Maybe (listToMaybe)
+import Control.Monad.Loops (iterateUntilM)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string, space)
 import Text.Parsec ((<|>))
@@ -18,6 +20,7 @@ data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 type Program = Seq Instruction
 data MachineState = MachineState { acc :: Int, pc :: Int }
 data FinalState = Terminated | LoopsForever
+data Status = Running | Done deriving (Eq)
 
 inputParser :: Parser Program
 inputParser = Seq.fromList <$> linesOf (instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop)
@@ -38,41 +41,41 @@ runMachine program = go (MachineState 0 0) Set.empty
                      Just (Jmp x) -> state { pc = pc state + x }
                      Just _ -> state { pc = pc state + 1 }
 
-runMachine' :: Program -> [(FinalState, MachineState)]
-runMachine' program = go program (MachineState 0 0) Set.empty False
+runMachine' :: Program -> [MachineState]
+runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminated advance (Running, program, MachineState 0 0, Set.empty, False)
   where
-    go :: Program -> MachineState -> Set Int -> Bool -> [(FinalState, MachineState)]
-    go p state seen flipped | pc state `Set.member` seen = [(LoopsForever, state)]
-                            | pc state == Seq.length p = [(Terminated, state)]
-                            | otherwise =
-                                case (flipped, p !? pc state) of
-                                  (_, Just inst@(Acc _)) -> go p (newState inst) (Set.insert (pc state) seen) flipped
-                                  (True, Just inst) -> go p (newState inst) (Set.insert (pc state) seen) flipped
-                                  (False, Just original) ->
-                                    do
-                                      doFlip <- [True, False]
-                                      if doFlip
-                                      then do
-                                        let adjusted (Jmp x) = Nop x
-                                            adjusted (Nop x) = Jmp x
-                                        let newP = adjust' adjusted (pc state) p
-                                        go p state seen True ++ go newP state seen True
-                                      else
-                                        go p (newState original) (Set.insert (pc state) seen) False
-      where
-        newState :: Instruction -> MachineState
-        newState instruction =
-          case instruction of
-            Acc x -> state { acc = acc state + x, pc = pc state + 1 }
-            Jmp x -> state { pc = pc state + x }
-            _ -> state { pc = pc state + 1 }
+    terminated :: (Status, Program, MachineState, Set Int, Bool) -> Bool
+    terminated (Done, _, _, _, _) = True
+    terminated _ = False
+
+    advance :: (Status, Program, MachineState, Set Int, Bool) -> [(Status, Program, MachineState, Set Int, Bool)]
+    advance m@(ss, p, st, sn, flp) | ss == Done = [m]
+                                   | pc st `Set.member` sn = []
+                                   | pc st == length p = [(Done, p, st, sn, flp)]
+                                   | flp = case p !? pc st of
+                                             Just inst -> [(Running, p, newState inst st, Set.insert (pc st) sn, flp)]
+                                   | otherwise = case p !? pc st of
+                                                   Just inst@(Acc _) -> [(Running, p, newState inst st, Set.insert (pc st) sn, flp)]
+                                                   Just original -> do
+                                                     doFlip <- [True, False]
+                                                     if doFlip
+                                                     then do
+                                                       let adjusted (Jmp x) = Nop x
+                                                           adjusted (Nop x) = Jmp x
+                                                       let newP = adjust' adjusted (pc st) p
+                                                       [(Running, p, st, sn, True), (Running, newP, st, sn, True)]
+                                                     else
+                                                       [(Running, p, newState original st, Set.insert (pc st) sn, False)]
+
+    newState :: Instruction -> MachineState -> MachineState
+    newState instruction state =
+      case instruction of
+        Acc x -> state { acc = acc state + x, pc = pc state + 1 }
+        Jmp x -> state { pc = pc state + x }
+        _ -> state { pc = pc state + 1 }
 
 fixProgram :: Program -> Maybe Int
-fixProgram = go . runMachine'
-  where
-    go [] = Nothing
-    go ((Terminated, s):_) = Just . acc $ s
-    go (_:xs) = go xs
+fixProgram = listToMaybe . map acc . runMachine'
 
 printResults :: Program -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
