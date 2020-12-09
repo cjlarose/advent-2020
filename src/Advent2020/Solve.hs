@@ -2,8 +2,6 @@ module Advent2020.Solve
   ( solverForProblem
   ) where
 
-import Data.Either (Either(..))
-
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import qualified Advent2020.Day01
 import qualified Advent2020.Day02
