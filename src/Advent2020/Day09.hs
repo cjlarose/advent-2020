@@ -2,26 +2,17 @@ module Advent2020.Day09
   ( solve
   ) where
 
-import Data.List (find, tails)
+import Data.List (find)
 import Data.Maybe (isJust)
 import Text.Parsec.ByteString (Parser)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (integer, linesOf)
+import Advent.ListUtils (pairs, subLists)
 
 inputParser :: Parser [Int]
 inputParser = linesOf integer
-
-pairs :: [Int] -> [(Int, Int)]
-pairs [] = []
-pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
-
-subLists :: [Int] -> [[Int]]
-subLists xs = go 0
-  where
-    go seqLen | seqLen > length xs = []
-              | otherwise = (map (take seqLen) . take (length xs - seqLen) . tails $ xs) ++ go (succ seqLen)
 
 constructableFromPreamble :: [Int] -> Int -> Bool
 constructableFromPreamble preamble k = isJust . find (\(a, b) -> a + b == k) . pairs $ preamble
