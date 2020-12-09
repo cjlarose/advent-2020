@@ -24,9 +24,9 @@ subsequenceSum :: Int -> [Int] -> Int
 subsequenceSum k xs = maximum seq + minimum seq
   where
     seq = go 2
-    go sz = case find ((== k) . sum) (map (\i -> take sz . drop i $ xs) [0..length xs]) of
-              Nothing -> go . succ $ sz
-              Just seq -> seq
+    go seqLen = case find ((== k) . sum) (map (\i -> take seqLen . drop i $ xs) [0..length xs]) of
+                  Nothing -> go . succ $ seqLen
+                  Just seq -> seq
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults ints = PuzzleAnswerPair (part1, part2)
