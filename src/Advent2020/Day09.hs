@@ -2,7 +2,7 @@ module Advent2020.Day09
   ( solve
   ) where
 
-import Data.List (find)
+import Data.List (find, tails)
 import Data.Maybe (isJust)
 import Text.Parsec.ByteString (Parser)
 
@@ -21,7 +21,7 @@ subLists :: [Int] -> [[Int]]
 subLists xs = go 0
   where
     go seqLen | seqLen > length xs = []
-              | otherwise = map (\i -> take seqLen . drop i $ xs) [0..length xs - 1 - seqLen]  ++ go (succ seqLen)
+              | otherwise = (map (take seqLen) . take (length xs - seqLen) . tails $ xs) ++ go (succ seqLen)
 
 constructableFromPreamble :: [Int] -> Int -> Bool
 constructableFromPreamble preamble k = isJust . find (\(a, b) -> a + b == k) . pairs $ preamble
