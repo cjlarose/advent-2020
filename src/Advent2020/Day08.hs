@@ -20,7 +20,7 @@ import Advent.CommonParsers (integer, linesOf)
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 type Program = Seq Instruction
 data MachineState = MachineState { acc :: Int, pc :: Int }
-data Status = Running | Done deriving (Eq)
+data Status = Running | TerminatedBeforeInfiniteLoop | Done deriving (Eq)
 
 inputParser :: Parser Program
 inputParser = Seq.fromList <$> linesOf (instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop)
@@ -35,13 +35,15 @@ executeInstruction instruction state =
     _ -> state { pc = pc state + 1 }
 
 runMachine :: Program -> Maybe MachineState
-runMachine program = (\(_, st, _) -> st) <$> (find terminated . iterate' advance $ init)
+runMachine program = (\(_, st, _) -> st) <$> (find aboutToLoop . iterate' advance $ init)
   where
-    terminated (Done, _, _) = True
-    terminated _ = False
+    aboutToLoop (TerminatedBeforeInfiniteLoop, _, _) = True
+    aboutToLoop _ = False
+
     init = (Running, MachineState 0 0, Set.empty)
     advance (status, state, seen)
-      | pc state `Set.member` seen = (Done, state, seen)
+      | pc state `Set.member` seen = (TerminatedBeforeInfiniteLoop, state, seen)
+      | pc state == length program = (Done, state, seen)
       | otherwise = (status, executeInstruction (fromJust $ program !? pc state) state, Set.insert (pc state) seen)
 
 runMachine' :: Program -> [MachineState]
