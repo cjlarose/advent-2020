@@ -2,17 +2,9 @@ module Advent2020.Day09
   ( solve
   ) where
 
-import Data.List (find, foldl')
-import Data.Maybe (isJust, fromJust)
-import qualified Data.Set as Set
-import Data.Set (Set)
-import qualified Data.Map as Map
-import Data.Map (Map, (!))
-import qualified Data.Sequence as Seq
-import Data.Sequence (Seq, (!?), adjust')
+import Data.List (find)
+import Data.Maybe (isJust)
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (string, space)
-import Text.Parsec ((<|>))
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
