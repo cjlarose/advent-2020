@@ -6,6 +6,7 @@ import qualified Data.Set as Set
 import Data.Set (Set)
 import qualified Data.Sequence as Seq
 import Data.Sequence (Seq, (!?), adjust')
+import Data.List (iterate', find)
 import Data.Maybe (listToMaybe, fromJust)
 import Control.Monad.Loops (iterateUntilM)
 import Text.Parsec.ByteString (Parser)
@@ -34,11 +35,14 @@ executeInstruction instruction state =
     _ -> state { pc = pc state + 1 }
 
 runMachine :: Program -> Maybe MachineState
-runMachine program = go (MachineState 0 0) Set.empty
+runMachine program = (\(_, st, _) -> st) <$> (find terminated . iterate' advance $ init)
   where
-    go state seen | pc state `Set.member` seen = Just state
-                  | pc state == Seq.length program = Nothing -- terminated
-                  | otherwise = go (executeInstruction (fromJust $ program !? pc state) state) . Set.insert (pc state) $ seen
+    terminated (Done, _, _) = True
+    terminated _ = False
+    init = (Running, MachineState 0 0, Set.empty)
+    advance (status, state, seen)
+      | pc state `Set.member` seen = (Done, state, seen)
+      | otherwise = (status, executeInstruction (fromJust $ program !? pc state) state, Set.insert (pc state) seen)
 
 runMachine' :: Program -> [MachineState]
 runMachine' program = map (\(Done, _, st, _, _) -> st) $ iterateUntilM terminated advance init
