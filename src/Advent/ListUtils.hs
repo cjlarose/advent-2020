@@ -5,7 +5,7 @@ module Advent.ListUtils
 
 import Data.List (tails)
 
--- Returns consective pairs of members of a list
+-- Returns all pairs of members of a list
 pairs :: [Int] -> [(Int, Int)]
 pairs [] = []
 pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
