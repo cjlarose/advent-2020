@@ -5,7 +5,7 @@ module Advent2020.Day10
 import Data.List (sort, foldl', inits)
 import Data.Map.Strict (Map, (!))
 import qualified Data.Map.Strict as Map
-import Data.Sequence (Seq, viewr, ViewR((:>)), (|>))
+import Data.Sequence (Seq, viewr, ViewR((:>)))
 import qualified Data.Sequence as Seq
 import Text.Parsec.ByteString (Parser)
 
@@ -27,16 +27,16 @@ joltageDifferences xs = (diffsOf 1, diffsOf 3 + 1)
     diffs = map (\[Joltage x, Joltage y] -> y - x) . filter (\l -> length l == 2) . subLists $ (Joltage 0 : sort xs)
 
 validArrangements :: [Joltage] -> Int
-validArrangements xs = waysToGetTo ! (Joltage desiredJoltage, joltages |> Joltage desiredJoltage)
+validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
   where
     joltages = Seq.fromList xs
 
-    desiredJoltage :: Int
-    desiredJoltage = case viewr joltages of
-                       _ :> Joltage j -> j
+    maxJoltage :: Int
+    maxJoltage = case viewr joltages of
+                   _ :> Joltage j -> j
 
     waysToGetTo :: Map (Joltage, Seq Joltage) Int
-    waysToGetTo = foldl' f Map.empty $ [(Joltage j, Seq.fromList prefix) |  prefix <- inits (xs ++ [Joltage desiredJoltage]), j <- [0..desiredJoltage]]
+    waysToGetTo = foldl' f Map.empty $ [(Joltage j, Seq.fromList prefix) |  prefix <- inits xs, j <- [0..maxJoltage]]
       where
         f :: Map (Joltage, Seq Joltage) Int -> (Joltage, Seq Joltage) -> Map (Joltage, Seq Joltage) Int
         f acc (Joltage k, prefix) =
