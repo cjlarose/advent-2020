@@ -1,14 +1,13 @@
 module Advent.ListUtils
-  ( pairs
+  ( subsetsOfCardinalityTwo
   , subLists
   ) where
 
 import Data.List (tails)
 
--- Returns all pairs of members of a list
-pairs :: [Int] -> [(Int, Int)]
-pairs [] = []
-pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
+subsetsOfCardinalityTwo :: [Int] -> [(Int, Int)]
+subsetsOfCardinalityTwo [] = []
+subsetsOfCardinalityTwo (x:xs) = map (\y -> (x, y)) xs ++ subsetsOfCardinalityTwo xs
 
 -- Returns contiguous subsequences of a list
 subLists :: [a] -> [[a]]

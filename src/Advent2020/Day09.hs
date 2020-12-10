@@ -8,13 +8,13 @@ import Text.Parsec.ByteString (Parser)
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (integer, linesOf)
-import Advent.ListUtils (pairs, subLists)
+import Advent.ListUtils (subsetsOfCardinalityTwo, subLists)
 
 inputParser :: Parser [Int]
 inputParser = linesOf integer
 
 constructableFromPreamble :: [Int] -> Int -> Bool
-constructableFromPreamble preamble k = any (\(a, b) -> a + b == k) . pairs $ preamble
+constructableFromPreamble preamble k = any (\(a, b) -> a + b == k) . subsetsOfCardinalityTwo $ preamble
 
 invalidEntry :: [Int] -> Maybe Int
 invalidEntry ints = go . zip candidates $ prefixes

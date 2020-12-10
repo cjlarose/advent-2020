@@ -8,7 +8,7 @@ import Control.Monad (guard)
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (listOfNonNegativeIntegers)
-import Advent.ListUtils (pairs)
+import Advent.ListUtils (subsetsOfCardinalityTwo)
 
 productOfSpecialPair :: [Int] -> Int
 productOfSpecialPair entries = x * y
@@ -25,7 +25,7 @@ productOfSpecialTriple entries = x * y * z
   where
     entrySet = Set.fromList entries
     (x, y, z) = head $ do
-      (a, b) <- pairs entries
+      (a, b) <- subsetsOfCardinalityTwo entries
       let c = 2020 - a - b
       guard $ c `Set.member` entrySet
       pure (a, b, c)
