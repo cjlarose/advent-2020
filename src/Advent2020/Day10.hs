@@ -14,35 +14,41 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (integer, linesOf)
 import Advent.ListUtils (subLists)
 
-inputParser :: Parser [Int]
-inputParser = linesOf integer
+newtype Joltage = Joltage Int deriving (Eq, Ord)
 
-joltageDifferences :: [Int] -> (Int, Int)
+inputParser :: Parser [Joltage]
+inputParser = linesOf (Joltage <$> integer)
+
+joltageDifferences :: [Joltage] -> (Int, Int)
 joltageDifferences xs = (diffsOf 1, diffsOf 3 + 1)
   where
     diffsOf k = length . filter (== k) $ diffs
     diffs :: [Int]
-    diffs = map (\[x, y] -> y - x) . filter (\l -> length l == 2) . subLists $ (0:sort xs)
+    diffs = map (\[Joltage x, Joltage y] -> y - x) . filter (\l -> length l == 2) . subLists $ (Joltage 0 : sort xs)
 
-validArrangements :: [Int] -> Int
-validArrangements xs = waysToGetTo ! (desiredJoltage, joltages |> desiredJoltage)
+validArrangements :: [Joltage] -> Int
+validArrangements xs = waysToGetTo ! (Joltage desiredJoltage, joltages |> Joltage desiredJoltage)
   where
     joltages = Seq.fromList xs
-    desiredJoltage = maximum joltages + 3
 
-    waysToGetTo :: Map (Int, Seq Int) Int
-    waysToGetTo = foldl' f Map.empty $ [(j, Seq.fromList prefix) |  prefix <- inits (xs ++ [desiredJoltage]), j <- [0..desiredJoltage]]
+    desiredJoltage :: Int
+    desiredJoltage = case viewr joltages of
+                       _ :> Joltage j -> j
+
+    waysToGetTo :: Map (Joltage, Seq Joltage) Int
+    waysToGetTo = foldl' f Map.empty $ [(Joltage j, Seq.fromList prefix) |  prefix <- inits (xs ++ [Joltage desiredJoltage]), j <- [0..desiredJoltage]]
       where
-        f :: Map (Int, Seq Int) Int -> (Int, Seq Int) -> Map (Int, Seq Int) Int
-        f acc (k, prefix) = case viewr prefix of
-                              smolBoys :> bigBoy ->
-                                if bigBoy /= k
-                                then Map.insert (k, prefix) (acc ! (k, smolBoys)) acc
-                                else Map.insert (k, prefix) (sum . map (\z -> acc ! (z, smolBoys)) . filter (>= 0) $ [k - 1, k - 2, k - 3]) acc
-                              Seq.EmptyR ->
-                                if k == 0 then Map.insert (0, prefix) 1 acc else Map.insert (k, prefix) 0 acc
+        f :: Map (Joltage, Seq Joltage) Int -> (Joltage, Seq Joltage) -> Map (Joltage, Seq Joltage) Int
+        f acc (Joltage k, prefix) =
+          case viewr prefix of
+            smolBoys :> bigBoy ->
+              if bigBoy /= Joltage k
+              then Map.insert (Joltage k, prefix) (acc ! (Joltage k, smolBoys)) acc
+              else Map.insert (Joltage k, prefix) (sum . map (\z -> acc ! (Joltage z, smolBoys)) . filter (>= 0) $ [k - 1, k - 2, k - 3]) acc
+            Seq.EmptyR ->
+              if k == 0 then Map.insert (Joltage k, prefix) 1 acc else Map.insert (Joltage k, prefix) 0 acc
 
-printResults :: [Int] -> PuzzleAnswerPair
+printResults :: [Joltage] -> PuzzleAnswerPair
 printResults joltages = PuzzleAnswerPair (part1, part2)
   where
     (diffOf1, diffOf3) = joltageDifferences joltages
