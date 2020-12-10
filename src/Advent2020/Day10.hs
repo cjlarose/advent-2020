@@ -12,7 +12,7 @@ import Text.Parsec.ByteString (Parser)
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (integer, linesOf)
-import Advent.ListUtils (subLists)
+import Advent.ListUtils (consectutivePairs)
 
 newtype Joltage = Joltage Int deriving (Eq, Ord)
 
@@ -24,7 +24,7 @@ joltageDifferences xs = (diffsOf 1, diffsOf 3 + 1)
   where
     diffsOf k = length . filter (== k) $ diffs
     diffs :: [Int]
-    diffs = map (\[Joltage x, Joltage y] -> y - x) . filter (\l -> length l == 2) . subLists $ (Joltage 0 : sort xs)
+    diffs = map (\(Joltage x, Joltage y) -> y - x) . consectutivePairs $ (Joltage 0 : sort xs)
 
 validArrangements :: [Joltage] -> Int
 validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
