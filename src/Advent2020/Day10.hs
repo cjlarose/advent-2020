@@ -29,14 +29,15 @@ joltageDifferences xs = (diffsOf 1, diffsOf 3 + 1)
 validArrangements :: [Joltage] -> Int
 validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
   where
-    joltages = Seq.fromList xs
+    sorted = sort xs
+    joltages = Seq.fromList sorted
 
     maxJoltage :: Int
     maxJoltage = case viewr joltages of
                    _ :> Joltage j -> j
 
     waysToGetTo :: Map (Joltage, Seq Joltage) Int
-    waysToGetTo = foldl' f Map.empty $ [(Joltage j, Seq.fromList prefix) |  prefix <- inits xs, j <- [0..maxJoltage]]
+    waysToGetTo = foldl' f Map.empty $ [(Joltage j, Seq.fromList prefix) |  prefix <- inits sorted, j <- [0..maxJoltage]]
       where
         f :: Map (Joltage, Seq Joltage) Int -> (Joltage, Seq Joltage) -> Map (Joltage, Seq Joltage) Int
         f acc (Joltage k, prefix) =
@@ -53,7 +54,7 @@ printResults joltages = PuzzleAnswerPair (part1, part2)
   where
     (diffOf1, diffOf3) = joltageDifferences joltages
     part1 = show $ diffOf1 * diffOf3
-    part2 = show . validArrangements . sort $ joltages
+    part2 = show . validArrangements $ joltages
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 10
