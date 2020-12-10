@@ -27,6 +27,9 @@ joltageDifferences xs = (diffsOf 1, diffsOf 3 + 1)
     diffs :: [Int]
     diffs = map (\(Joltage x, Joltage y) -> y - x) . consectutivePairs $ (Joltage 0 : sort xs)
 
+possibleInputJoltages :: Joltage -> [Joltage]
+possibleInputJoltages (Joltage k) = map Joltage . filter (>= 0) $ [k - 1, k - 2, k - 3]
+
 validArrangements :: [Joltage] -> Int64
 validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
   where
@@ -46,7 +49,7 @@ validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
             smolBoys :> bigBoy ->
               if bigBoy /= Joltage k
               then Map.insert (Joltage k, prefix) (acc ! (Joltage k, smolBoys)) acc
-              else Map.insert (Joltage k, prefix) (sum . map (\z -> acc ! (Joltage z, smolBoys)) . filter (>= 0) $ [k - 1, k - 2, k - 3]) acc
+              else Map.insert (Joltage k, prefix) (sum . map (\z -> acc ! (z, smolBoys)) . possibleInputJoltages . Joltage $ k) acc
             Seq.EmptyR ->
               if k == 0 then Map.insert (Joltage k, prefix) 1 acc else Map.insert (Joltage k, prefix) 0 acc
 
