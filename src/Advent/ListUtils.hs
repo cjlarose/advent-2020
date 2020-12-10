@@ -11,7 +11,7 @@ pairs [] = []
 pairs (x:xs) = map (\y -> (x, y)) xs ++ pairs xs
 
 -- Returns contiguous subsequences of a list
-subLists :: [Int] -> [[Int]]
+subLists :: [a] -> [[a]]
 subLists xs = [] : go 1
   where
     go seqLen | seqLen > length xs = []
