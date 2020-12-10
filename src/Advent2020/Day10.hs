@@ -2,6 +2,7 @@ module Advent2020.Day10
   ( solve
   ) where
 
+import Data.Int (Int64)
 import Data.List (sort, foldl', inits)
 import Data.Map.Strict (Map, (!))
 import qualified Data.Map.Strict as Map
@@ -26,7 +27,7 @@ joltageDifferences xs = (diffsOf 1, diffsOf 3 + 1)
     diffs :: [Int]
     diffs = map (\(Joltage x, Joltage y) -> y - x) . consectutivePairs $ (Joltage 0 : sort xs)
 
-validArrangements :: [Joltage] -> Int
+validArrangements :: [Joltage] -> Int64
 validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
   where
     sorted = sort xs
@@ -36,10 +37,10 @@ validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
     maxJoltage = case viewr joltages of
                    _ :> Joltage j -> j
 
-    waysToGetTo :: Map (Joltage, Seq Joltage) Int
+    waysToGetTo :: Map (Joltage, Seq Joltage) Int64
     waysToGetTo = foldl' f Map.empty $ [(Joltage j, Seq.fromList prefix) |  prefix <- inits sorted, j <- [0..maxJoltage]]
       where
-        f :: Map (Joltage, Seq Joltage) Int -> (Joltage, Seq Joltage) -> Map (Joltage, Seq Joltage) Int
+        f :: Map (Joltage, Seq Joltage) Int64 -> (Joltage, Seq Joltage) -> Map (Joltage, Seq Joltage) Int64
         f acc (Joltage k, prefix) =
           case viewr prefix of
             smolBoys :> bigBoy ->
