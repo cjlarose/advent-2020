@@ -31,7 +31,7 @@ possibleInputJoltages :: Joltage -> [Joltage]
 possibleInputJoltages (Joltage k) = map Joltage . filter (>= 0) $ [k - 1, k - 2, k - 3]
 
 validArrangements :: [Joltage] -> Int64
-validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
+validArrangements xs = waysToGetTo ! (Joltage maxJoltage, Seq.length joltages)
   where
     sorted = sort xs
     joltages = Seq.fromList sorted
@@ -40,20 +40,20 @@ validArrangements xs = waysToGetTo ! (Joltage maxJoltage, joltages)
     maxJoltage = case viewr joltages of
                    _ :> Joltage j -> j
 
-    waysToGetTo :: Map (Joltage, Seq Joltage) Int64
+    waysToGetTo :: Map (Joltage, Int) Int64
     waysToGetTo = foldl' f Map.empty $ [(Joltage j, Seq.fromList prefix) |  prefix <- inits sorted, j <- [0..maxJoltage]]
       where
-        f :: Map (Joltage, Seq Joltage) Int64 -> (Joltage, Seq Joltage) -> Map (Joltage, Seq Joltage) Int64
+        f :: Map (Joltage, Int) Int64 -> (Joltage, Seq Joltage) -> Map (Joltage, Int) Int64
         f acc (j, prefix) =
           case viewr prefix of
             smolBoys :> bigBoy ->
               if bigBoy /= j
-              then Map.insert (j, prefix) (acc ! (j, smolBoys)) acc
-              else Map.insert (j, prefix) (sum . map (\z -> acc ! (z, smolBoys)) . possibleInputJoltages $ j) acc
+              then Map.insert (j, Seq.length prefix) (acc ! (j, Seq.length smolBoys)) acc
+              else Map.insert (j, Seq.length prefix) (sum . map (\z -> acc ! (z, Seq.length smolBoys)) . possibleInputJoltages $ j) acc
             Seq.EmptyR ->
               case j of
-                Joltage 0 -> Map.insert (j, prefix) 1 acc
-                Joltage _ -> Map.insert (j, prefix) 0 acc
+                Joltage 0 -> Map.insert (j, Seq.length prefix) 1 acc
+                Joltage _ -> Map.insert (j, Seq.length prefix) 0 acc
 
 printResults :: [Joltage] -> PuzzleAnswerPair
 printResults joltages = PuzzleAnswerPair (part1, part2)
