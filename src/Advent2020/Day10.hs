@@ -47,9 +47,10 @@ validArrangements xs = waysToGetTo ! (Joltage maxJoltage, Seq.length joltages)
         f acc (j, prefix) =
           case viewr prefix of
             smolBoys :> bigBoy ->
-              if bigBoy /= j
-              then Map.insert (j, Seq.length prefix) (acc ! (j, Seq.length smolBoys)) acc
-              else Map.insert (j, Seq.length prefix) (sum . map (\z -> acc ! (z, Seq.length smolBoys)) . possibleInputJoltages $ j) acc
+              let numWays = if bigBoy /= j
+                            then acc ! (j, Seq.length smolBoys)
+                            else sum . map (\z -> acc ! (z, Seq.length smolBoys)) . possibleInputJoltages $ j
+              in Map.insert (j, Seq.length prefix) numWays acc
             Seq.EmptyR ->
               case j of
                 Joltage 0 -> Map.insert (j, Seq.length prefix) 1 acc
