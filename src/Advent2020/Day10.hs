@@ -4,7 +4,7 @@ module Advent2020.Day10
 
 import Data.Int (Int64)
 import Data.List (sort, foldl')
-import Data.Map.Strict (Map, (!))
+import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
 import qualified Data.Sequence as Seq
 import Text.Parsec.ByteString (Parser)
@@ -30,20 +30,15 @@ possibleInputJoltages :: Joltage -> [Joltage]
 possibleInputJoltages (Joltage k) = map Joltage . filter (>= 0) $ [k - 1, k - 2, k - 3]
 
 validArrangements :: [Joltage] -> Int64
-validArrangements xs = waysToGetTo ! maximum sorted
+validArrangements xs = foldl' f Map.empty joltages ! maximum sorted
   where
     sorted = Joltage 0 : sort xs
     joltages = Seq.fromList sorted
-
-    waysToGetTo :: Map Joltage Int64
-    waysToGetTo = foldl' f Map.empty joltages
+    f acc j = Map.insert j numWays acc
       where
-        f :: Map Joltage Int64 -> Joltage -> Map Joltage Int64
-        f acc j = Map.insert j numWays acc
-          where
-            numWays = case j of
-                        Joltage 0 -> 1
-                        Joltage _ -> sum . map (\k -> Map.findWithDefault 0 k acc) . possibleInputJoltages $ j
+        numWays = case j of
+                    Joltage 0 -> 1
+                    Joltage _ -> sum . map (\k -> Map.findWithDefault 0 k acc) . possibleInputJoltages $ j
 
 printResults :: [Joltage] -> PuzzleAnswerPair
 printResults joltages = PuzzleAnswerPair (part1, part2)
