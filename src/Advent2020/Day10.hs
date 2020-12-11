@@ -3,10 +3,9 @@ module Advent2020.Day10
   ) where
 
 import Data.Int (Int64)
-import Data.List (sort, foldl', inits)
+import Data.List (sort, foldl')
 import Data.Map.Strict (Map, (!))
 import qualified Data.Map.Strict as Map
-import Data.Sequence (Seq, viewr, ViewR((:>)))
 import qualified Data.Sequence as Seq
 import Text.Parsec.ByteString (Parser)
 
@@ -31,30 +30,19 @@ possibleInputJoltages :: Joltage -> [Joltage]
 possibleInputJoltages (Joltage k) = map Joltage . filter (>= 0) $ [k - 1, k - 2, k - 3]
 
 validArrangements :: [Joltage] -> Int64
-validArrangements xs = waysToGetTo ! (Joltage maxJoltage, Seq.length joltages)
+validArrangements xs = waysToGetTo ! maximum sorted
   where
-    sorted = sort xs
+    sorted = Joltage 0 : sort xs
     joltages = Seq.fromList sorted
 
-    maxJoltage :: Int
-    maxJoltage = case viewr joltages of
-                   _ :> Joltage j -> j
-
-    waysToGetTo :: Map (Joltage, Int) Int64
-    waysToGetTo = foldl' f Map.empty $ [(Joltage j, Seq.fromList prefix) |  prefix <- inits sorted, j <- [0..maxJoltage]]
+    waysToGetTo :: Map Joltage Int64
+    waysToGetTo = foldl' f Map.empty joltages
       where
-        f :: Map (Joltage, Int) Int64 -> (Joltage, Seq Joltage) -> Map (Joltage, Int) Int64
-        f acc (j, prefix) =
-          case viewr prefix of
-            smolBoys :> bigBoy ->
-              let numWays = if bigBoy /= j
-                            then acc ! (j, Seq.length smolBoys)
-                            else sum . map (\z -> acc ! (z, Seq.length smolBoys)) . possibleInputJoltages $ j
-              in Map.insert (j, Seq.length prefix) numWays acc
-            Seq.EmptyR ->
-              case j of
-                Joltage 0 -> Map.insert (j, Seq.length prefix) 1 acc
-                Joltage _ -> Map.insert (j, Seq.length prefix) 0 acc
+        f :: Map Joltage Int64 -> Joltage -> Map Joltage Int64
+        f acc j@(Joltage 0) = Map.insert j 1 acc
+        f acc j = Map.insert j numWays acc
+          where
+            numWays = sum . map (\k -> Map.findWithDefault 0 k acc) . possibleInputJoltages $ j
 
 printResults :: [Joltage] -> PuzzleAnswerPair
 printResults joltages = PuzzleAnswerPair (part1, part2)
