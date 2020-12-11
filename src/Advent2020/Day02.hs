@@ -2,6 +2,7 @@ module Advent2020.Day02
   ( solve
   ) where
 
+import Numeric.Natural (Natural)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec (many1)
 import Text.Parsec.Char (string, lower, char)
@@ -11,8 +12,8 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf, integerWithoutLeadingSign)
 
 type Password = String
-data PasswordPolicy = PasswordPolicy { minOccurences :: Int
-                                     , maxOccurences :: Int
+data PasswordPolicy = PasswordPolicy { minOccurences :: Natural
+                                     , maxOccurences :: Natural
                                      , character :: Char } deriving Show
 data PasswordLine = PasswordLine PasswordPolicy Password
 
@@ -28,7 +29,7 @@ passwordLines = linesOf passwordLine
 checkValid :: PasswordLine -> Bool
 checkValid (PasswordLine (PasswordPolicy minOccurences maxOccurences character) password) = occurences <= maxOccurences && occurences >= minOccurences
   where
-    occurences = length . filter (character ==) $ password
+    occurences = fromIntegral . length . filter (character ==) $ password
 
 checkValidPositions :: PasswordLine -> Bool
 checkValidPositions (PasswordLine (PasswordPolicy i j character) password) = (1 ==) . length . filter id . zipWith (\index c -> c == character && (index == i || index == j)) [1..] $ password

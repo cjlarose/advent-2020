@@ -2,6 +2,7 @@ module Advent2020.Day07
   ( solve
   ) where
 
+import Numeric.Natural (Natural)
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.List (find)
@@ -14,7 +15,7 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (integerWithoutLeadingSign, word, linesOf)
 
 type Color = String
-data Rule = Rule { parent :: Color, children :: [(Int, Color)] } deriving Show
+data Rule = Rule { parent :: Color, children :: [(Natural, Color)] } deriving Show
 
 inputParser :: Parser [Rule]
 inputParser = linesOf rule
@@ -36,7 +37,7 @@ allowedContainersFor rules = Set.fromList . go
       p <- map parent . filter (any (\(_, c) -> c == y) . children) $ rules
       p : go p
 
-countChildren :: [Rule] -> Color -> Int
+countChildren :: [Rule] -> Color -> Natural
 countChildren rules x = maybe 0 count rule
   where
     rule = find ((==) x . parent) rules

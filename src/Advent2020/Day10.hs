@@ -2,6 +2,7 @@ module Advent2020.Day10
   ( solve
   ) where
 
+import Numeric.Natural (Natural)
 import Data.Int (Int64)
 import Data.List (sort, foldl')
 import Data.Map.Strict ((!))
@@ -13,20 +14,22 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (integerWithoutLeadingSign, linesOf)
 import Advent.ListUtils (consectutivePairs)
 
-newtype Joltage = Joltage Int deriving (Eq, Ord)
+newtype Joltage = Joltage Natural deriving (Eq, Ord)
 
 inputParser :: Parser [Joltage]
 inputParser = linesOf (Joltage <$> integerWithoutLeadingSign)
 
-joltageDifferences :: [Joltage] -> (Int, Int)
+joltageDifferences :: [Joltage] -> (Natural, Natural)
 joltageDifferences xs = (diffsOf 1, diffsOf 3 + 1)
   where
-    diffsOf k = length . filter (== k) $ diffs
-    diffs :: [Int]
+    diffsOf k = fromIntegral . length . filter (== k) $ diffs
+    diffs :: [Natural]
     diffs = map (\(Joltage x, Joltage y) -> y - x) . consectutivePairs $ (Joltage 0 : sort xs)
 
 possibleInputJoltages :: Joltage -> [Joltage]
-possibleInputJoltages (Joltage k) = map Joltage . filter (>= 0) $ [k - 1, k - 2, k - 3]
+possibleInputJoltages (Joltage k) = map (Joltage . fromIntegral) . filter (>= 0) $ candidates
+  where
+    candidates = [toInteger k - 1, toInteger k - 2, toInteger k - 3]
 
 validArrangements :: [Joltage] -> Int64
 validArrangements xs = foldl' f Map.empty sorted ! maximum sorted
