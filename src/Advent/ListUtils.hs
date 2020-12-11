@@ -6,14 +6,16 @@ module Advent.ListUtils
 
 import Data.List (tails)
 
+-- | Returns all pairs of elements in a list
 subsetsOfCardinalityTwo :: [Int] -> [(Int, Int)]
 subsetsOfCardinalityTwo [] = []
 subsetsOfCardinalityTwo (x:xs) = map (\y -> (x, y)) xs ++ subsetsOfCardinalityTwo xs
 
+-- | Returns consectutive pairs of elements in a list
 consectutivePairs :: [a] -> [(a, a)]
 consectutivePairs xs =  map (\(a:b:_) -> (a, b)) .  take (length xs - 1) . tails $ xs
 
--- Returns contiguous subsequences of a list
+-- | Returns contiguous subsequences of a list
 subLists :: [a] -> [[a]]
 subLists xs = [] : go 1
   where
