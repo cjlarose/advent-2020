@@ -7,7 +7,7 @@ module Advent.ListUtils
 import Data.List (tails)
 
 -- | Returns all pairs of elements in a list
-subsetsOfCardinalityTwo :: [Int] -> [(Int, Int)]
+subsetsOfCardinalityTwo :: [a] -> [(a, a)]
 subsetsOfCardinalityTwo [] = []
 subsetsOfCardinalityTwo (x:xs) = map (\y -> (x, y)) xs ++ subsetsOfCardinalityTwo xs
 
