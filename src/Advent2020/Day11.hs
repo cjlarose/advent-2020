@@ -38,16 +38,20 @@ neighbors (i, j) (WaitingArea w) = do
   guard $ (i, j) /= (ii, jj)
   maybeToList . Map.lookup (ii, jj) $ w
 
-simulateRound :: WaitingArea -> WaitingArea
-simulateRound w@(WaitingArea waitingArea) = WaitingArea . Map.mapWithKey newState $ waitingArea
-  where
-    empty = (==) Empty
-    occupied = (==) Occupied
-    newState :: (Int, Int) -> Seat -> Seat
-    newState pos Empty | all empty . neighbors pos $ w = Occupied
-                       | otherwise = Empty
-    newState pos Occupied | (>= 4) . length . filter occupied . neighbors pos $ w = Empty
-                          | otherwise = Occupied
+simulateRound :: (WaitingArea -> (Int, Int) -> Seat -> Seat) -> WaitingArea -> WaitingArea
+simulateRound f w@(WaitingArea waitingArea) = WaitingArea . Map.mapWithKey (f w) $ waitingArea
+
+empty :: Seat -> Bool
+empty = (==) Empty
+
+occupied :: Seat -> Bool
+occupied = (==) Occupied
+
+newState :: WaitingArea -> (Int, Int) -> Seat -> Seat
+newState w pos Empty | all empty . neighbors pos $ w = Occupied
+                     | otherwise = Empty
+newState w pos Occupied | (>= 4) . length . filter occupied . neighbors pos $ w = Empty
+                        | otherwise = Occupied
 
 firstRepeatedValue :: Eq a => [a] -> Maybe a
 firstRepeatedValue [] = Nothing
@@ -57,8 +61,8 @@ firstRepeatedValue (x:xs) = go x xs
     go last (y:ys) | last == y = Just last
                    | otherwise = go y ys
 
-stableState :: WaitingArea -> Maybe WaitingArea
-stableState = firstRepeatedValue . iterate simulateRound
+stableState :: (WaitingArea -> (Int, Int) -> Seat -> Seat) -> WaitingArea -> Maybe WaitingArea
+stableState f = firstRepeatedValue . iterate (simulateRound f)
 
 totalOccupied :: WaitingArea -> Int
 totalOccupied (WaitingArea w) = Map.foldl f 0 w
@@ -69,7 +73,7 @@ totalOccupied (WaitingArea w) = Map.foldl f 0 w
 printResults :: WaitingArea -> PuzzleAnswerPair
 printResults waitingArea = PuzzleAnswerPair (part1, part2)
   where
-    (part1, part2) = case stableState waitingArea of
+    (part1, part2) = case stableState newState waitingArea of
       Just stable -> (show . totalOccupied $ stable, "not yet implemented")
       Nothing -> error "no stable state"
 
