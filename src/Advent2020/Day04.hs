@@ -12,7 +12,7 @@ import Text.Parsec (many1, sepBy1, eof, (<|>), count, try, choice)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (nonNegativeInteger, word)
+import Advent.CommonParsers (integerWithoutLeadingSign, word)
 
 data FieldValue = Valid | Invalid deriving Show
 type Passport = Map String FieldValue
@@ -38,7 +38,7 @@ passportsP = sepBy1 passport endOfLine <* eof
     token p = p <* space
     fieldType key p = (,) <$> try (string key <* char ':') <*> (try (Valid <$ token p) <|> (Invalid <$ token word))
     nonNegativeDecimalIntegerInRange min max = do
-      val <- nonNegativeInteger
+      val <- integerWithoutLeadingSign
       if val >= min && val <= max
         then pure . show $ val
         else fail "no parse"

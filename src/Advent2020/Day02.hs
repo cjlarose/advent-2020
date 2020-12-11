@@ -8,7 +8,7 @@ import Text.Parsec.Char (string, lower, char)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, nonNegativeInteger)
+import Advent.CommonParsers (linesOf, integerWithoutLeadingSign)
 
 type Password = String
 data PasswordPolicy = PasswordPolicy { minOccurences :: Int
@@ -17,7 +17,7 @@ data PasswordPolicy = PasswordPolicy { minOccurences :: Int
 data PasswordLine = PasswordLine PasswordPolicy Password
 
 passwordPolicy :: Parser PasswordPolicy
-passwordPolicy = PasswordPolicy <$> nonNegativeInteger <* char '-' <*> nonNegativeInteger <* char ' ' <*> lower
+passwordPolicy = PasswordPolicy <$> integerWithoutLeadingSign <* char '-' <*> integerWithoutLeadingSign <* char ' ' <*> lower
 
 passwordLine :: Parser PasswordLine
 passwordLine = PasswordLine <$> passwordPolicy <* string ": " <*> many1 lower
