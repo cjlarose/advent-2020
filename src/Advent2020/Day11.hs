@@ -66,14 +66,11 @@ visibleSeats pos waitingArea = do
 simulateRound :: SeatUpdateRule -> WaitingArea -> WaitingArea
 simulateRound f w@WaitingArea{getSeats=seats} = w { getSeats = Map.mapWithKey (f w) seats }
 
-empty :: Seat -> Bool
-empty = (==) Empty
-
 occupied :: Seat -> Bool
 occupied = (==) Occupied
 
 naiveRule :: SeatUpdateRule
-naiveRule w pos Empty | all empty . neighbors pos $ w = Occupied
+naiveRule w pos Empty | not . any occupied . neighbors pos $ w = Occupied
                       | otherwise = Empty
 naiveRule w pos Occupied | (>= 4) . length . filter occupied . neighbors pos $ w = Empty
                          | otherwise = Occupied
