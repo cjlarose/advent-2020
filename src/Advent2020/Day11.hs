@@ -74,9 +74,8 @@ totalOccupied (WaitingArea w) = Map.foldl f 0 w
 printResults :: WaitingArea -> PuzzleAnswerPair
 printResults waitingArea = PuzzleAnswerPair (part1, part2)
   where
-    (part1, part2) = case stableState newState waitingArea of
-      Just stable -> (show . totalOccupied $ stable, "not yet implemented")
-      Nothing -> error "no stable state"
+    part1 = maybe "no stable state" (show . totalOccupied) $ stableState newState waitingArea
+    part2 = "not yet implemented"
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 11
