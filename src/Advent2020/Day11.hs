@@ -48,11 +48,11 @@ empty = (==) Empty
 occupied :: Seat -> Bool
 occupied = (==) Occupied
 
-newState :: SeatUpdateRule
-newState w pos Empty | all empty . neighbors pos $ w = Occupied
-                     | otherwise = Empty
-newState w pos Occupied | (>= 4) . length . filter occupied . neighbors pos $ w = Empty
-                        | otherwise = Occupied
+naiveRule :: SeatUpdateRule
+naiveRule w pos Empty | all empty . neighbors pos $ w = Occupied
+                      | otherwise = Empty
+naiveRule w pos Occupied | (>= 4) . length . filter occupied . neighbors pos $ w = Empty
+                         | otherwise = Occupied
 
 firstRepeatedValue :: Eq a => [a] -> Maybe a
 firstRepeatedValue [] = Nothing
@@ -74,7 +74,7 @@ totalOccupied (WaitingArea w) = Map.foldl f 0 w
 printResults :: WaitingArea -> PuzzleAnswerPair
 printResults waitingArea = PuzzleAnswerPair (part1, part2)
   where
-    part1 = maybe "no stable state" (show . totalOccupied) $ stableState newState waitingArea
+    part1 = maybe "no stable state" (show . totalOccupied) $ stableState naiveRule waitingArea
     part2 = "not yet implemented"
 
 solve :: IO (Either String PuzzleAnswerPair)
