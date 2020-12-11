@@ -6,7 +6,6 @@ import Data.Int (Int64)
 import Data.List (sort, foldl')
 import Data.Map.Strict ((!))
 import qualified Data.Map.Strict as Map
-import qualified Data.Sequence as Seq
 import Text.Parsec.ByteString (Parser)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
@@ -30,10 +29,9 @@ possibleInputJoltages :: Joltage -> [Joltage]
 possibleInputJoltages (Joltage k) = map Joltage . filter (>= 0) $ [k - 1, k - 2, k - 3]
 
 validArrangements :: [Joltage] -> Int64
-validArrangements xs = foldl' f Map.empty joltages ! maximum sorted
+validArrangements xs = foldl' f Map.empty sorted ! maximum sorted
   where
     sorted = Joltage 0 : sort xs
-    joltages = Seq.fromList sorted
     f acc j = Map.insert j numWays acc
       where
         numWays = case j of
