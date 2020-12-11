@@ -3,7 +3,7 @@ module Advent.CommonParsers
   , linesOf
   , nonNegativeInteger
   , word
-  , integer
+  , integerWithOptionalLeadingSign
   , token
   ) where
 
@@ -15,8 +15,8 @@ import Text.Parsec.ByteString (Parser)
 nonNegativeInteger :: Parser Int
 nonNegativeInteger = read <$> many1 digit
 
-integer :: Parser Int
-integer = (*) <$> option 1 sign <*> nonNegativeInteger
+integerWithOptionalLeadingSign :: Parser Int
+integerWithOptionalLeadingSign = (*) <$> option 1 sign <*> nonNegativeInteger
   where
     sign = (-1 <$ char '-') <|> (1 <$ char '+')
 

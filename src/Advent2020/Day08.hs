@@ -15,7 +15,7 @@ import Text.Parsec ((<|>))
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (integer, linesOf)
+import Advent.CommonParsers (integerWithOptionalLeadingSign, linesOf)
 
 data Instruction = Acc Int | Jmp Int | Nop Int deriving Show
 type Program = Seq Instruction
@@ -25,7 +25,7 @@ data Status = Running | TerminatedBeforeInfiniteLoop | Done deriving (Eq)
 inputParser :: Parser Program
 inputParser = Seq.fromList <$> linesOf (instruction "acc" Acc <|> instruction "jmp" Jmp <|> instruction "nop" Nop)
   where
-    instruction name f = f <$> ((string name *> space) *> integer)
+    instruction name f = f <$> ((string name *> space) *> integerWithOptionalLeadingSign)
 
 executeInstruction :: Instruction -> MachineState -> MachineState
 executeInstruction instruction state =

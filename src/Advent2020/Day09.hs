@@ -7,11 +7,11 @@ import Text.Parsec.ByteString (Parser)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (integer, linesOf)
+import Advent.CommonParsers (integerWithOptionalLeadingSign, linesOf)
 import Advent.ListUtils (subsetsOfCardinalityTwo, subLists)
 
 inputParser :: Parser [Int]
-inputParser = linesOf integer
+inputParser = linesOf integerWithOptionalLeadingSign
 
 constructableFromPreamble :: [Int] -> Int -> Bool
 constructableFromPreamble preamble k = any (\(a, b) -> a + b == k) . subsetsOfCardinalityTwo $ preamble
