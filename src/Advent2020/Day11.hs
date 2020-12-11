@@ -23,18 +23,18 @@ data WaitingArea = WaitingArea { getSeats :: Map (Int, Int) Seat
 type SeatUpdateRule = WaitingArea -> (Int, Int) -> Seat -> Seat
 
 inputParser :: Parser WaitingArea
-inputParser = toMap . concat <$> linesOf row
+inputParser = toMap <$> linesOf row
   where
-    row = catMaybes <$> many1 seat
+    row = many1 seat
     seat = (Nothing <$ char '.') <|> (recordPos <* char 'L')
     recordPos = do
       pos <- getPosition
       let line = sourceLine pos
       let col = sourceColumn pos
       pure . Just $ (line - 1, col - 1)
-    toMap xs = WaitingArea { getSeats = Map.fromList . map (, Empty) $ xs
-                           , getM = length xs
-                           , getN = length (head xs)
+    toMap xs = WaitingArea { getSeats = Map.fromList . map (, Empty) . catMaybes . concat $ xs
+                           , getN = length xs
+                           , getM = length (head xs)
                            }
 
 neighbors :: (Int, Int) -> WaitingArea -> [Seat]
