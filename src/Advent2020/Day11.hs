@@ -17,7 +17,9 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf)
 
 data Seat = Empty | Occupied deriving (Show, Eq)
-newtype WaitingArea = WaitingArea (Map (Int, Int) Seat) deriving (Show, Eq)
+data WaitingArea = WaitingArea { getSeats :: Map (Int, Int) Seat
+                               , getM :: Int
+                               , getN :: Int } deriving (Show, Eq)
 type SeatUpdateRule = WaitingArea -> (Int, Int) -> Seat -> Seat
 
 inputParser :: Parser WaitingArea
@@ -30,17 +32,20 @@ inputParser = toMap . concat <$> linesOf row
       let line = sourceLine pos
       let col = sourceColumn pos
       pure . Just $ (line - 1, col - 1)
-    toMap = WaitingArea . Map.fromList . map (, Empty)
+    toMap xs = WaitingArea { getSeats = Map.fromList . map (, Empty) $ xs
+                           , getM = length xs
+                           , getN = length (head xs)
+                           }
 
 neighbors :: (Int, Int) -> WaitingArea -> [Seat]
-neighbors (i, j) (WaitingArea w) = do
+neighbors (i, j) WaitingArea{ getSeats=seats } = do
   ii <- [i-1..i+1]
   jj <- [j-1..j+1]
   guard $ (i, j) /= (ii, jj)
-  maybeToList . Map.lookup (ii, jj) $ w
+  maybeToList . Map.lookup (ii, jj) $ seats
 
 simulateRound :: SeatUpdateRule -> WaitingArea -> WaitingArea
-simulateRound f w@(WaitingArea waitingArea) = WaitingArea . Map.mapWithKey (f w) $ waitingArea
+simulateRound f w@WaitingArea{getSeats=seats} = w { getSeats = Map.mapWithKey (f w) seats }
 
 empty :: Seat -> Bool
 empty = (==) Empty
@@ -66,7 +71,7 @@ stableState :: SeatUpdateRule -> WaitingArea -> Maybe WaitingArea
 stableState f = firstRepeatedValue . iterate (simulateRound f)
 
 totalOccupied :: WaitingArea -> Int
-totalOccupied (WaitingArea w) = Map.foldl f 0 w
+totalOccupied WaitingArea{getSeats=seats} = Map.foldl f 0 seats
   where
     f acc Occupied = acc + 1
     f acc _ = acc
