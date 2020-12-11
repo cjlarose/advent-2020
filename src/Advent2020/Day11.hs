@@ -44,6 +44,25 @@ neighbors (i, j) WaitingArea{ getSeats=seats } = do
   guard $ (i, j) /= (ii, jj)
   maybeToList . Map.lookup (ii, jj) $ seats
 
+firstVisibleSeatInDirection :: (Int, Int) -> (Int, Int) -> WaitingArea -> Maybe Seat
+firstVisibleSeatInDirection (i, j) (di, dj) WaitingArea{getSeats=seats,getN=n,getM=m} = firstVisible coords
+  where
+    coords = takeWhile inBounds . drop 1 . iterate (\(ii, jj) -> (ii + di, jj + dj)) $ (i, j)
+    inBounds (ii, jj) = ii >= 0 && ii < n && jj >= 0 && jj < m
+    firstVisible :: [(Int, Int)] -> Maybe Seat
+    firstVisible [] = Nothing
+    firstVisible (x:xs) = case Map.lookup x seats of
+                            Just seat -> Just seat
+                            Nothing -> firstVisible xs
+
+visibleSeats :: (Int, Int) -> WaitingArea -> [Seat]
+visibleSeats pos waitingArea = do
+  di <- [-1, 0, 1]
+  dj <- [-1, 0, 1]
+  let dir = (di, dj)
+  guard $ dir /= (0, 0)
+  maybeToList . firstVisibleSeatInDirection pos dir $ waitingArea
+
 simulateRound :: SeatUpdateRule -> WaitingArea -> WaitingArea
 simulateRound f w@WaitingArea{getSeats=seats} = w { getSeats = Map.mapWithKey (f w) seats }
 
@@ -58,6 +77,12 @@ naiveRule w pos Empty | all empty . neighbors pos $ w = Occupied
                       | otherwise = Empty
 naiveRule w pos Occupied | (>= 4) . length . filter occupied . neighbors pos $ w = Empty
                          | otherwise = Occupied
+
+realisticRule :: SeatUpdateRule
+realisticRule w pos Empty | not . any occupied . visibleSeats pos $ w = Occupied
+                          | otherwise = Empty
+realisticRule w pos Occupied | (>= 5) . length . filter occupied . visibleSeats pos $ w = Empty
+                             | otherwise = Occupied
 
 firstRepeatedValue :: Eq a => [a] -> Maybe a
 firstRepeatedValue [] = Nothing
@@ -80,7 +105,7 @@ printResults :: WaitingArea -> PuzzleAnswerPair
 printResults waitingArea = PuzzleAnswerPair (part1, part2)
   where
     part1 = maybe "no stable state" (show . totalOccupied) $ stableState naiveRule waitingArea
-    part2 = "not yet implemented"
+    part2 = maybe "no stable state" (show . totalOccupied) $ stableState realisticRule waitingArea
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 11
