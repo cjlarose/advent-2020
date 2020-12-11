@@ -18,6 +18,7 @@ import Advent.CommonParsers (linesOf)
 
 data Seat = Empty | Occupied deriving (Show, Eq)
 newtype WaitingArea = WaitingArea (Map (Int, Int) Seat) deriving (Show, Eq)
+type SeatUpdateRule = WaitingArea -> (Int, Int) -> Seat -> Seat
 
 inputParser :: Parser WaitingArea
 inputParser = toMap . concat <$> linesOf row
@@ -38,7 +39,7 @@ neighbors (i, j) (WaitingArea w) = do
   guard $ (i, j) /= (ii, jj)
   maybeToList . Map.lookup (ii, jj) $ w
 
-simulateRound :: (WaitingArea -> (Int, Int) -> Seat -> Seat) -> WaitingArea -> WaitingArea
+simulateRound :: SeatUpdateRule -> WaitingArea -> WaitingArea
 simulateRound f w@(WaitingArea waitingArea) = WaitingArea . Map.mapWithKey (f w) $ waitingArea
 
 empty :: Seat -> Bool
@@ -47,7 +48,7 @@ empty = (==) Empty
 occupied :: Seat -> Bool
 occupied = (==) Occupied
 
-newState :: WaitingArea -> (Int, Int) -> Seat -> Seat
+newState :: SeatUpdateRule
 newState w pos Empty | all empty . neighbors pos $ w = Occupied
                      | otherwise = Empty
 newState w pos Occupied | (>= 4) . length . filter occupied . neighbors pos $ w = Empty
@@ -61,7 +62,7 @@ firstRepeatedValue (x:xs) = go x xs
     go last (y:ys) | last == y = Just last
                    | otherwise = go y ys
 
-stableState :: (WaitingArea -> (Int, Int) -> Seat -> Seat) -> WaitingArea -> Maybe WaitingArea
+stableState :: SeatUpdateRule -> WaitingArea -> Maybe WaitingArea
 stableState f = firstRepeatedValue . iterate (simulateRound f)
 
 totalOccupied :: WaitingArea -> Int
