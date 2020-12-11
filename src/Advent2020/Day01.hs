@@ -8,7 +8,7 @@ import Control.Monad (guard)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, integerWithoutLeadingSign)
+import Advent.CommonParsers (linesOf, natural)
 import Advent.ListUtils (subsetsOfCardinalityTwo)
 
 productOfSpecialPair :: [Natural] -> Natural
@@ -41,4 +41,4 @@ printResults entries = PuzzleAnswerPair (part1, part2)
     part2 = show . productOfSpecialTriple $ entries
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse (linesOf integerWithoutLeadingSign) printResults <$> getProblemInputAsByteString 1
+solve = withSuccessfulParse (linesOf natural) printResults <$> getProblemInputAsByteString 1

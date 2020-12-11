@@ -1,6 +1,6 @@
 module Advent.CommonParsers
   ( linesOf
-  , integerWithoutLeadingSign
+  , natural
   , word
   , integerWithOptionalLeadingSign
   , token
@@ -12,11 +12,11 @@ import Text.Parsec (many1, sepEndBy1, eof, option, (<|>))
 import Text.Parsec.Char (endOfLine, digit, satisfy, char, space)
 import Text.Parsec.ByteString (Parser)
 
-integerWithoutLeadingSign :: Parser Natural
-integerWithoutLeadingSign = read <$> many1 digit
+natural :: Parser Natural
+natural = read <$> many1 digit
 
 integerWithOptionalLeadingSign :: Parser Int
-integerWithOptionalLeadingSign = (*) <$> option 1 sign <*> (fromIntegral <$> integerWithoutLeadingSign)
+integerWithOptionalLeadingSign = (*) <$> option 1 sign <*> (fromIntegral <$> natural)
   where
     sign = (-1 <$ char '-') <|> (1 <$ char '+')
 

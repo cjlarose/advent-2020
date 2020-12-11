@@ -11,13 +11,13 @@ import Text.Parsec.ByteString (Parser)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (integerWithoutLeadingSign, linesOf)
+import Advent.CommonParsers (natural, linesOf)
 import Advent.ListUtils (consectutivePairs)
 
 newtype Joltage = Joltage Natural deriving (Eq, Ord)
 
 inputParser :: Parser [Joltage]
-inputParser = linesOf (Joltage <$> integerWithoutLeadingSign)
+inputParser = linesOf (Joltage <$> natural)
 
 joltageDifferences :: [Joltage] -> (Natural, Natural)
 joltageDifferences xs = (diffsOf 1, diffsOf 3 + 1)

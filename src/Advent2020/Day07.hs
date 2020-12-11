@@ -12,7 +12,7 @@ import Text.Parsec (sepBy1, (<|>), try, option)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (integerWithoutLeadingSign, word, linesOf)
+import Advent.CommonParsers (natural, word, linesOf)
 
 type Color = String
 data Rule = Rule { parent :: Color, children :: [(Natural, Color)] } deriving Show
@@ -28,7 +28,7 @@ inputParser = linesOf rule
     color :: Parser String
     color = (\a b -> a ++ " " ++ b) <$> token word <*> token word
     bagOrBags = string "bag" <* option ' ' (char 's')
-    child = (,) <$> integerWithoutLeadingSign <* space <*> color <* bagOrBags
+    child = (,) <$> natural <* space <*> color <* bagOrBags
 
 allowedContainersFor :: [Rule] -> Color -> Set Color
 allowedContainersFor rules = Set.fromList . go
