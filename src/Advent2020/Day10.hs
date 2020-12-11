@@ -39,10 +39,11 @@ validArrangements xs = waysToGetTo ! maximum sorted
     waysToGetTo = foldl' f Map.empty joltages
       where
         f :: Map Joltage Int64 -> Joltage -> Map Joltage Int64
-        f acc j@(Joltage 0) = Map.insert j 1 acc
         f acc j = Map.insert j numWays acc
           where
-            numWays = sum . map (\k -> Map.findWithDefault 0 k acc) . possibleInputJoltages $ j
+            numWays = case j of
+                        Joltage 0 -> 1
+                        Joltage _ -> sum . map (\k -> Map.findWithDefault 0 k acc) . possibleInputJoltages $ j
 
 printResults :: [Joltage] -> PuzzleAnswerPair
 printResults joltages = PuzzleAnswerPair (part1, part2)
