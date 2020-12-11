@@ -1,6 +1,5 @@
 module Advent.CommonParsers
-  ( listOfNonNegativeIntegers
-  , linesOf
+  ( linesOf
   , nonNegativeInteger
   , word
   , integerWithOptionalLeadingSign
@@ -22,9 +21,6 @@ integerWithOptionalLeadingSign = (*) <$> option 1 sign <*> nonNegativeInteger
 
 linesOf :: Parser a -> Parser [a]
 linesOf p = sepEndBy1 p endOfLine <* eof
-
-listOfNonNegativeIntegers :: Parser [Int]
-listOfNonNegativeIntegers = linesOf nonNegativeInteger
 
 word :: Parser String
 word = many1 . satisfy $ not . isSpace
