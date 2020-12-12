@@ -1,7 +1,7 @@
 module Main where
 
 import System.Environment (getArgs)
-import System.IO (hPutStrLn, stderr, putStrLn)
+import System.IO (hPutStrLn, stderr)
 import System.Exit (exitFailure)
 
 import Advent2020.Solve (solverForProblem)
