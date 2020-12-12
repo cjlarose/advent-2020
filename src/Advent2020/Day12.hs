@@ -40,6 +40,7 @@ moveShipByInstructions :: [Instruction] -> (Int, Int)
 moveShipByInstructions = getPosition . foldl' moveShip ShipState{ getDirection=E, getPosition=(0,0) }
   where
     moveShip :: ShipState -> Instruction -> ShipState
+    moveShip s@ShipState{getDirection=dir} (Move F x) = s { getPosition = getPosition $ moveShip s (Move dir x) }
     moveShip s@ShipState{getPosition=pos} (Move N x) = s { getPosition=translate pos N x }
     moveShip s@ShipState{getPosition=pos} (Move E x) = s { getPosition=translate pos E x }
     moveShip s@ShipState{getPosition=pos} (Move S x) = s { getPosition=translate pos S x }
@@ -68,8 +69,6 @@ moveShipByInstructions = getPosition . foldl' moveShip ShipState{ getDirection=E
     moveShip s@ShipState{getDirection=W} (RotateRight 180) = s { getDirection=E }
 
     moveShip s (RotateRight 270) = moveShip s (RotateLeft 90)
-
-    moveShip s@ShipState{getDirection=dir} (Move F x) = s { getPosition = getPosition $ moveShip s (Move dir x) }
 
     moveShip _ instruction = error $ "cannot handle instruction " ++ show instruction
 
