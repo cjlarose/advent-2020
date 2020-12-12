@@ -37,27 +37,28 @@ inputParser = toMap <$> linesOf row
                            , getM = length (head xs)
                            }
 
-neighbors :: (Int, Int) -> WaitingArea -> [Seat]
-neighbors (i, j) WaitingArea{ getSeats=seats } = do
+neighbors :: (Int, Int) -> WaitingArea -> [(Int, Int)]
+neighbors (i, j) WaitingArea{ getN=n, getM=m } = do
   ii <- [i-1..i+1]
   jj <- [j-1..j+1]
   guard $ (i, j) /= (ii, jj)
-  maybeToList . Map.lookup (ii, jj) $ seats
+  guard $ ii < n && jj < m
+  pure (ii, jj)
 
-firstVisibleSeatInDirection :: (Int, Int) -> (Int, Int) -> WaitingArea -> Maybe Seat
+firstVisibleSeatInDirection :: (Int, Int) -> (Int, Int) -> WaitingArea -> Maybe (Int, Int)
 firstVisibleSeatInDirection (i, j) (di, dj) waitingArea@WaitingArea{getN=n,getM=m} = firstVisible waitingArea coords
   where
     coords = takeWhile inBounds . drop 1 . iterate (\(ii, jj) -> (ii + di, jj + dj)) $ (i, j)
     inBounds (ii, jj) = ii >= 0 && ii < n && jj >= 0 && jj < m
 
-firstVisible :: WaitingArea -> [(Int, Int)] -> Maybe Seat
+firstVisible :: WaitingArea -> [(Int, Int)] -> Maybe (Int, Int)
 firstVisible _ [] = Nothing
 firstVisible waitingArea@WaitingArea{getSeats=seats} (x:xs) =
   case Map.lookup x seats of
-    Just seat -> Just seat
+    Just _ -> Just x
     Nothing -> firstVisible waitingArea xs
 
-visibleSeats :: (Int, Int) -> WaitingArea -> [Seat]
+visibleSeats :: (Int, Int) -> WaitingArea -> [(Int, Int)]
 visibleSeats pos waitingArea = do
   di <- [-1, 0, 1]
   dj <- [-1, 0, 1]
@@ -68,19 +69,22 @@ visibleSeats pos waitingArea = do
 simulateRound :: SeatUpdateRule -> WaitingArea -> WaitingArea
 simulateRound f w@WaitingArea{getSeats=seats} = w { getSeats = Map.mapWithKey (f w) seats }
 
-occupied :: Seat -> Bool
-occupied = (==) Occupied
+occupied :: WaitingArea -> (Int, Int) -> Bool
+occupied waitingArea coord =
+  case Map.lookup coord $ getSeats waitingArea of
+    Just Occupied -> True
+    _ -> False
 
 naiveRule :: SeatUpdateRule
-naiveRule w pos Empty | not . any occupied . neighbors pos $ w = Occupied
+naiveRule w pos Empty | not . any (occupied w) . neighbors pos $ w = Occupied
                       | otherwise = Empty
-naiveRule w pos Occupied | (>= 4) . length . filter occupied . neighbors pos $ w = Empty
+naiveRule w pos Occupied | (>= 4) . length . filter (occupied w) . neighbors pos $ w = Empty
                          | otherwise = Occupied
 
 realisticRule :: SeatUpdateRule
-realisticRule w pos Empty | not . any occupied . visibleSeats pos $ w = Occupied
+realisticRule w pos Empty | not . any (occupied w) . visibleSeats pos $ w = Occupied
                           | otherwise = Empty
-realisticRule w pos Occupied | (>= 5) . length . filter occupied . visibleSeats pos $ w = Empty
+realisticRule w pos Occupied | (>= 5) . length . filter (occupied w) . visibleSeats pos $ w = Empty
                              | otherwise = Occupied
 
 firstRepeatedValue :: Eq a => [a] -> Maybe a
