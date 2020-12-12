@@ -31,42 +31,61 @@ data ShipState = ShipState { getDirection :: Direction
                            , getPosition :: (Int, Int)
                            }
 
-moveShip :: [Instruction] -> (Int, Int)
-moveShip = getPosition . foldl' f ShipState{ getDirection=E, getPosition=(0,0) }
+moveShip :: ShipState -> Instruction -> ShipState
+moveShip s@ShipState{getPosition=(i, j)} (Move N x) = s { getPosition=(i - fromIntegral x, j) }
+moveShip s@ShipState{getPosition=(i, j)} (Move E x) = s { getPosition=(i, j + fromIntegral x) }
+moveShip s@ShipState{getPosition=(i, j)} (Move S x) = s { getPosition=(i + fromIntegral x, j) }
+moveShip s@ShipState{getPosition=(i, j)} (Move W x) = s { getPosition=(i, j - fromIntegral x) }
+
+moveShip s@ShipState{getDirection=N} (RotateLeft 90) = s { getDirection=W }
+moveShip s@ShipState{getDirection=E} (RotateLeft 90) = s { getDirection=N }
+moveShip s@ShipState{getDirection=S} (RotateLeft 90) = s { getDirection=E }
+moveShip s@ShipState{getDirection=W} (RotateLeft 90) = s { getDirection=S }
+
+moveShip s@ShipState{getDirection=N} (RotateLeft 180) = s { getDirection=S }
+moveShip s@ShipState{getDirection=E} (RotateLeft 180) = s { getDirection=W }
+moveShip s@ShipState{getDirection=S} (RotateLeft 180) = s { getDirection=N }
+moveShip s@ShipState{getDirection=W} (RotateLeft 180) = s { getDirection=E }
+
+moveShip s (RotateLeft 270) = moveShip s (RotateRight 90)
+
+moveShip s@ShipState{getDirection=N} (RotateRight 90) = s { getDirection=E }
+moveShip s@ShipState{getDirection=E} (RotateRight 90) = s { getDirection=S }
+moveShip s@ShipState{getDirection=S} (RotateRight 90) = s { getDirection=W }
+moveShip s@ShipState{getDirection=W} (RotateRight 90) = s { getDirection=N }
+
+moveShip s@ShipState{getDirection=N} (RotateRight 180) = s { getDirection=S }
+moveShip s@ShipState{getDirection=E} (RotateRight 180) = s { getDirection=W }
+moveShip s@ShipState{getDirection=S} (RotateRight 180) = s { getDirection=N }
+moveShip s@ShipState{getDirection=W} (RotateRight 180) = s { getDirection=E }
+
+moveShip s (RotateRight 270) = moveShip s (RotateLeft 90)
+
+moveShip s@ShipState{getDirection=dir} (Move F x) = s { getPosition = getPosition $ moveShip s (Move dir x) }
+
+moveShip _ instruction = error $ "cannot handle instruction " ++ show instruction
+
+moveShipByInstructions :: [Instruction] -> (Int, Int)
+moveShipByInstructions = getPosition . foldl' moveShip ShipState{ getDirection=E, getPosition=(0,0) }
+
+moveShipByWaypointInstructions :: [Instruction] -> (Int, Int)
+moveShipByWaypointInstructions = getPosition . fst . foldl' moveShip' (ShipState{ getDirection=E, getPosition=(0,0) }, (-1, 10))
   where
-    f :: ShipState -> Instruction -> ShipState
-    f s@ShipState{getPosition=(i, j)} (Move N x) = s { getPosition=(i - fromIntegral x, j) }
-    f s@ShipState{getPosition=(i, j)} (Move E x) = s { getPosition=(i, j + fromIntegral x) }
-    f s@ShipState{getPosition=(i, j)} (Move S x) = s { getPosition=(i + fromIntegral x, j) }
-    f s@ShipState{getPosition=(i, j)} (Move W x) = s { getPosition=(i, j - fromIntegral x) }
+    moveShip' :: (ShipState, (Int, Int)) -> Instruction -> (ShipState, (Int, Int))
+    moveShip' (s, (i, j)) (Move N x) = (s, (i - fromIntegral x, j))
+    moveShip' (s, (i, j)) (Move E x) = (s, (i, j + fromIntegral x))
+    moveShip' (s, (i, j)) (Move S x) = (s, (i + fromIntegral x, j))
+    moveShip' (s, (i, j)) (Move W x) = (s, (i, j - fromIntegral x))
 
-    f s@ShipState{getDirection=N} (RotateLeft 90) = s { getDirection=W }
-    f s@ShipState{getDirection=E} (RotateLeft 90) = s { getDirection=N }
-    f s@ShipState{getDirection=S} (RotateLeft 90) = s { getDirection=E }
-    f s@ShipState{getDirection=W} (RotateLeft 90) = s { getDirection=S }
+    moveShip' (s, (i, j)) (RotateLeft 90) = (s, (- j, i))
+    moveShip' (s, (i, j)) (RotateLeft 180) = (s, (- i, - j))
+    moveShip' (s, (i, j)) (RotateLeft 270) = (s, (j, - i))
 
-    f s@ShipState{getDirection=N} (RotateLeft 180) = s { getDirection=S }
-    f s@ShipState{getDirection=E} (RotateLeft 180) = s { getDirection=W }
-    f s@ShipState{getDirection=S} (RotateLeft 180) = s { getDirection=N }
-    f s@ShipState{getDirection=W} (RotateLeft 180) = s { getDirection=E }
+    moveShip' (s, (i, j)) (RotateRight 90) = (s, (j, - i))
+    moveShip' (s, (i, j)) (RotateRight 180) = (s, (- i, - j))
+    moveShip' (s, (i, j)) (RotateRight 270) = (s, (- j, i))
 
-    f s (RotateLeft 270) = f s (RotateRight 90)
-
-    f s@ShipState{getDirection=N} (RotateRight 90) = s { getDirection=E }
-    f s@ShipState{getDirection=E} (RotateRight 90) = s { getDirection=S }
-    f s@ShipState{getDirection=S} (RotateRight 90) = s { getDirection=W }
-    f s@ShipState{getDirection=W} (RotateRight 90) = s { getDirection=N }
-
-    f s@ShipState{getDirection=N} (RotateRight 180) = s { getDirection=S }
-    f s@ShipState{getDirection=E} (RotateRight 180) = s { getDirection=W }
-    f s@ShipState{getDirection=S} (RotateRight 180) = s { getDirection=N }
-    f s@ShipState{getDirection=W} (RotateRight 180) = s { getDirection=E }
-
-    f s (RotateRight 270) = f s (RotateLeft 90)
-
-    f s@ShipState{getDirection=dir} (Move F x) = s { getPosition = getPosition $ f s (Move dir x) }
-
-    f _ instruction = error $ "cannot handle instruction " ++ show instruction
+    moveShip' (s@ShipState{getPosition=(i,j)}, (di, dj)) (Move F x) = (s { getPosition=(i + di * fromIntegral x, j + dj * fromIntegral x) }, (di, dj))
 
 manhattanDistance :: (Int, Int) -> Int
 manhattanDistance (i, j) = abs i + abs j
@@ -74,8 +93,8 @@ manhattanDistance (i, j) = abs i + abs j
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults instructions = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . manhattanDistance . moveShip $ instructions
-    part2 = "not yet implemented"
+    part1 = show . manhattanDistance . moveShipByInstructions $ instructions
+    part2 = show . manhattanDistance . moveShipByWaypointInstructions $ instructions
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 12
