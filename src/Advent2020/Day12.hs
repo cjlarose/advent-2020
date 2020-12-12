@@ -33,6 +33,9 @@ inputParser = linesOf instruction
 translate :: (Int, Int) -> (Int, Int) -> (Int, Int)
 translate (i, j) (di, dj) = (i + di, j + dj)
 
+scale :: (Int, Int) -> Int -> (Int, Int)
+scale (i, j) k = (i * k, j * k)
+
 translationVector :: Direction -> Natural -> (Int, Int)
 translationVector N x = (- fromIntegral x, 0)
 translationVector E x = (0, fromIntegral x)
@@ -76,7 +79,7 @@ moveShipByWaypointInstructions :: [Instruction] -> (Int, Int)
 moveShipByWaypointInstructions = getPosition . fst . foldl' moveShip' (ShipState{ getDirection=E, getPosition=(0,0) }, (-1, 10))
   where
     moveShip' :: (ShipState, (Int, Int)) -> Instruction -> (ShipState, (Int, Int))
-    moveShip' (s@ShipState{getPosition=(i,j)}, (di, dj)) (Move F x) = (s { getPosition=(i + di * fromIntegral x, j + dj * fromIntegral x) }, (di, dj))
+    moveShip' (s@ShipState{getPosition=pos}, waypoint) (Move F x) = (s { getPosition=translate pos . scale waypoint . fromIntegral $ x }, waypoint)
     moveShip' (s, waypoint) (Move dir x) = (s, translate waypoint $ translationVector dir x)
 
     moveShip' (s, (i, j)) (RotateLeft 90) = (s, (- j, i))
