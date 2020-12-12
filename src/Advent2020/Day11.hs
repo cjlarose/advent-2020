@@ -1,9 +1,9 @@
-{-# LANGUAGE TupleSections #-}
-
 module Advent2020.Day11
   ( solve
   ) where
 
+import qualified Data.Set as Set
+import Data.Set (Set, member)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map, (!))
 import Data.Maybe (catMaybes, maybeToList)
@@ -17,19 +17,25 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf)
 
 data Seat = Empty | Occupied deriving (Show, Eq)
-data WaitingArea = WaitingArea { getSeats :: Map (Int, Int) Seat
+data WaitingArea = WaitingArea { getSeats :: Set (Int, Int)
+                               , getOccupiedSeats :: Set (Int, Int)
                                , getM :: Int
                                , getN :: Int } deriving (Eq)
-type SeatUpdateRule = WaitingArea -> Map (Int, Int) Seat
+type SeatUpdateRule = WaitingArea -> Set (Int, Int)
 
 instance Show WaitingArea where
   show waitingArea = unlines rows
     where
       rows = map row [0..getN waitingArea]
-      row i = map (\j -> toChar . Map.lookup (i, j) . getSeats $ waitingArea) [0..getM waitingArea]
+      row i = map (\j -> toChar . seatAt (i, j) $ waitingArea) [0..getM waitingArea]
       toChar (Just Empty) = 'L'
       toChar (Just Occupied) = '#'
       toChar Nothing = '.'
+
+seatAt :: (Int, Int) -> WaitingArea -> Maybe Seat
+seatAt k waitingArea | k `member` getOccupiedSeats waitingArea = Just Occupied
+                     | k `member` getSeats waitingArea = Just Empty
+                     | otherwise = Nothing
 
 inputParser :: Parser WaitingArea
 inputParser = toMap <$> linesOf row
@@ -41,7 +47,8 @@ inputParser = toMap <$> linesOf row
       let line = sourceLine pos
       let col = sourceColumn pos
       pure . Just $ (line - 1, col - 1)
-    toMap xs = WaitingArea { getSeats = Map.fromList . map (, Empty) . catMaybes . concat $ xs
+    toMap xs = WaitingArea { getSeats = Set.fromList . catMaybes . concat $ xs
+                           , getOccupiedSeats = Set.empty
                            , getN = length xs
                            , getM = length (head xs)
                            }
@@ -51,7 +58,7 @@ neighbors (i, j) WaitingArea{ getSeats=seats } = do
   ii <- [i-1..i+1]
   jj <- [j-1..j+1]
   guard $ (i, j) /= (ii, jj)
-  guard $ (ii, jj) `Map.member` seats
+  guard $ (ii, jj) `member` seats
   pure (ii, jj)
 
 firstVisibleSeatInDirection :: (Int, Int) -> (Int, Int) -> WaitingArea -> Maybe (Int, Int)
@@ -62,10 +69,9 @@ firstVisibleSeatInDirection (i, j) (di, dj) waitingArea@WaitingArea{getN=n,getM=
 
 firstVisible :: WaitingArea -> [(Int, Int)] -> Maybe (Int, Int)
 firstVisible _ [] = Nothing
-firstVisible waitingArea@WaitingArea{getSeats=seats} (x:xs) =
-  case Map.lookup x seats of
-    Just _ -> Just x
-    Nothing -> firstVisible waitingArea xs
+firstVisible waitingArea@WaitingArea{getSeats=seats} (x:xs)
+  | x `member` seats = Just x
+  | otherwise = firstVisible waitingArea xs
 
 visibleSeats :: (Int, Int) -> WaitingArea -> [(Int, Int)]
 visibleSeats pos waitingArea = do
@@ -76,38 +82,36 @@ visibleSeats pos waitingArea = do
   maybeToList . firstVisibleSeatInDirection pos dir $ waitingArea
 
 simulateRound :: SeatUpdateRule -> WaitingArea -> WaitingArea
-simulateRound f w = w { getSeats = f w }
+simulateRound f w = w { getOccupiedSeats = f w }
 
 occupied :: WaitingArea -> (Int, Int) -> Bool
-occupied waitingArea = (== Occupied) . (getSeats waitingArea !)
+occupied waitingArea coord = coord `member` getOccupiedSeats waitingArea
 
 naiveRule :: WaitingArea -> SeatUpdateRule
 naiveRule originalW = updateSeat
   where
     neighborsMap :: Map (Int, Int) [(Int, Int)]
-    neighborsMap = Map.mapWithKey (\coord _ -> neighbors coord originalW) . getSeats $ originalW
+    neighborsMap = Map.fromSet (`neighbors` originalW) . getSeats $ originalW
 
-    updateSeat :: WaitingArea -> Map (Int, Int) Seat
-    updateSeat w@WaitingArea{getSeats=seats} = Map.mapWithKey update seats
+    updateSeat :: WaitingArea -> Set (Int, Int)
+    updateSeat w@WaitingArea{getSeats=seats} = Set.filter isNowOccupied seats
       where
-        update pos Empty | not . any (occupied w) . (neighborsMap !) $ pos = Occupied
-                         | otherwise = Empty
-        update pos Occupied | (>= 4) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
-                              | otherwise = Occupied
+        isNowOccupied :: (Int, Int) -> Bool
+        isNowOccupied pos | occupied w pos = (< 4) . length . filter (occupied w) . (neighborsMap !) $ pos
+                          | otherwise = not . any (occupied w) . (neighborsMap !) $ pos
 
 realisticRule :: WaitingArea -> SeatUpdateRule
 realisticRule originalW = updateSeat
   where
     neighborsMap :: Map (Int, Int) [(Int, Int)]
-    neighborsMap = Map.mapWithKey (\coord _ -> visibleSeats coord originalW) . getSeats $ originalW
+    neighborsMap = Map.fromSet (`visibleSeats` originalW) . getSeats $ originalW
 
-    updateSeat :: WaitingArea -> Map (Int, Int) Seat
-    updateSeat w@WaitingArea{getSeats=seats} = Map.mapWithKey update seats
+    updateSeat :: WaitingArea -> Set (Int, Int)
+    updateSeat w@WaitingArea{getSeats=seats} = Set.filter isNowOccupied seats
       where
-        update pos Empty | not . any (occupied w) . (neighborsMap !) $ pos = Occupied
-                         | otherwise = Empty
-        update pos Occupied | (>= 5) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
-                            | otherwise = Occupied
+        isNowOccupied :: (Int, Int) -> Bool
+        isNowOccupied pos | occupied w pos = (< 5) . length . filter (occupied w) . (neighborsMap !) $ pos
+                          | otherwise = not . any (occupied w) . (neighborsMap !) $ pos
 
 firstRepeatedValue :: Eq a => [a] -> Maybe a
 firstRepeatedValue [] = Nothing
@@ -121,10 +125,7 @@ stableState :: SeatUpdateRule -> WaitingArea -> Maybe WaitingArea
 stableState f = firstRepeatedValue . iterate (simulateRound f)
 
 totalOccupied :: WaitingArea -> Int
-totalOccupied WaitingArea{getSeats=seats} = Map.foldl f 0 seats
-  where
-    f acc Occupied = acc + 1
-    f acc _ = acc
+totalOccupied = Set.size . getOccupiedSeats
 
 printResults :: WaitingArea -> PuzzleAnswerPair
 printResults waitingArea = PuzzleAnswerPair (part1, part2)
