@@ -14,6 +14,7 @@ import qualified Advent2020.Day08
 import qualified Advent2020.Day09
 import qualified Advent2020.Day10
 import qualified Advent2020.Day11
+import qualified Advent2020.Day12
 
 solverForProblem :: Int -> IO (Either String PuzzleAnswerPair)
 solverForProblem 1 = Advent2020.Day01.solve
@@ -27,4 +28,5 @@ solverForProblem 8 = Advent2020.Day08.solve
 solverForProblem 9 = Advent2020.Day09.solve
 solverForProblem 10 = Advent2020.Day10.solve
 solverForProblem 11 = Advent2020.Day11.solve
+solverForProblem 12 = Advent2020.Day12.solve
 solverForProblem n = pure . Left $ "Unknown problem " ++ show n
