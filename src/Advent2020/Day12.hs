@@ -41,10 +41,7 @@ moveShipByInstructions = getPosition . foldl' moveShip ShipState{ getDirection=E
   where
     moveShip :: ShipState -> Instruction -> ShipState
     moveShip s@ShipState{getDirection=dir} (Move F x) = s { getPosition = getPosition $ moveShip s (Move dir x) }
-    moveShip s@ShipState{getPosition=pos} (Move N x) = s { getPosition=translate pos N x }
-    moveShip s@ShipState{getPosition=pos} (Move E x) = s { getPosition=translate pos E x }
-    moveShip s@ShipState{getPosition=pos} (Move S x) = s { getPosition=translate pos S x }
-    moveShip s@ShipState{getPosition=pos} (Move W x) = s { getPosition=translate pos W x }
+    moveShip s@ShipState{getPosition=pos} (Move dir x) = s { getPosition=translate pos dir x }
 
     moveShip s@ShipState{getDirection=N} (RotateLeft 90) = s { getDirection=W }
     moveShip s@ShipState{getDirection=E} (RotateLeft 90) = s { getDirection=N }
