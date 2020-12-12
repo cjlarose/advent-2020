@@ -73,10 +73,8 @@ moveShipByWaypointInstructions :: [Instruction] -> (Int, Int)
 moveShipByWaypointInstructions = getPosition . fst . foldl' moveShip' (ShipState{ getDirection=E, getPosition=(0,0) }, (-1, 10))
   where
     moveShip' :: (ShipState, (Int, Int)) -> Instruction -> (ShipState, (Int, Int))
-    moveShip' (s, (i, j)) (Move N x) = (s, (i - fromIntegral x, j))
-    moveShip' (s, (i, j)) (Move E x) = (s, (i, j + fromIntegral x))
-    moveShip' (s, (i, j)) (Move S x) = (s, (i + fromIntegral x, j))
-    moveShip' (s, (i, j)) (Move W x) = (s, (i, j - fromIntegral x))
+    moveShip' (s@ShipState{getPosition=(i,j)}, (di, dj)) (Move F x) = (s { getPosition=(i + di * fromIntegral x, j + dj * fromIntegral x) }, (di, dj))
+    moveShip' (s, waypoint) (Move dir x) = (s, translate waypoint dir x)
 
     moveShip' (s, (i, j)) (RotateLeft 90) = (s, (- j, i))
     moveShip' (s, (i, j)) (RotateLeft 180) = (s, (- i, - j))
@@ -85,8 +83,6 @@ moveShipByWaypointInstructions = getPosition . fst . foldl' moveShip' (ShipState
     moveShip' (s, (i, j)) (RotateRight 90) = (s, (j, - i))
     moveShip' (s, (i, j)) (RotateRight 180) = (s, (- i, - j))
     moveShip' (s, (i, j)) (RotateRight 270) = (s, (- j, i))
-
-    moveShip' (s@ShipState{getPosition=(i,j)}, (di, dj)) (Move F x) = (s { getPosition=(i + di * fromIntegral x, j + dj * fromIntegral x) }, (di, dj))
 
 manhattanDistance :: (Int, Int) -> Int
 manhattanDistance (i, j) = abs i + abs j
