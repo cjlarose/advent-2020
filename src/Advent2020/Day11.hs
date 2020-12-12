@@ -19,8 +19,17 @@ import Advent.CommonParsers (linesOf)
 data Seat = Empty | Occupied deriving (Show, Eq)
 data WaitingArea = WaitingArea { getSeats :: Map (Int, Int) Seat
                                , getM :: Int
-                               , getN :: Int } deriving (Show, Eq)
+                               , getN :: Int } deriving (Eq)
 type SeatUpdateRule = WaitingArea -> (Int, Int) -> Seat -> Seat
+
+instance Show WaitingArea where
+  show waitingArea = unlines rows
+    where
+      rows = map row [0..getN waitingArea]
+      row i = map (\j -> toChar . Map.lookup (i, j) . getSeats $ waitingArea) [0..getM waitingArea]
+      toChar (Just Empty) = 'L'
+      toChar (Just Occupied) = '#'
+      toChar Nothing = '.'
 
 inputParser :: Parser WaitingArea
 inputParser = toMap <$> linesOf row
