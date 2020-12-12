@@ -30,14 +30,20 @@ inputParser = linesOf instruction
                          ]
     action c f = f <$> (char c *> natural)
 
+translate :: (Int, Int) -> Direction -> Natural -> (Int, Int)
+translate (i, j) N x = (i - fromIntegral x, j)
+translate (i, j) E x = (i, j + fromIntegral x)
+translate (i, j) S x = (i + fromIntegral x, j)
+translate (i, j) W x = (i, j - fromIntegral x)
+
 moveShipByInstructions :: [Instruction] -> (Int, Int)
 moveShipByInstructions = getPosition . foldl' moveShip ShipState{ getDirection=E, getPosition=(0,0) }
   where
     moveShip :: ShipState -> Instruction -> ShipState
-    moveShip s@ShipState{getPosition=(i, j)} (Move N x) = s { getPosition=(i - fromIntegral x, j) }
-    moveShip s@ShipState{getPosition=(i, j)} (Move E x) = s { getPosition=(i, j + fromIntegral x) }
-    moveShip s@ShipState{getPosition=(i, j)} (Move S x) = s { getPosition=(i + fromIntegral x, j) }
-    moveShip s@ShipState{getPosition=(i, j)} (Move W x) = s { getPosition=(i, j - fromIntegral x) }
+    moveShip s@ShipState{getPosition=pos} (Move N x) = s { getPosition=translate pos N x }
+    moveShip s@ShipState{getPosition=pos} (Move E x) = s { getPosition=translate pos E x }
+    moveShip s@ShipState{getPosition=pos} (Move S x) = s { getPosition=translate pos S x }
+    moveShip s@ShipState{getPosition=pos} (Move W x) = s { getPosition=translate pos W x }
 
     moveShip s@ShipState{getDirection=N} (RotateLeft 90) = s { getDirection=W }
     moveShip s@ShipState{getDirection=E} (RotateLeft 90) = s { getDirection=N }
