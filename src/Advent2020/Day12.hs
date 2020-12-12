@@ -13,6 +13,9 @@ import Advent.CommonParsers (linesOf, natural)
 
 data Direction = N | E | S | W | F deriving Show
 data Instruction = Move Direction Natural | RotateLeft Natural | RotateRight Natural deriving Show
+data ShipState = ShipState { getDirection :: Direction
+                           , getPosition :: (Int, Int)
+                           }
 
 inputParser :: Parser [Instruction]
 inputParser = linesOf instruction
@@ -26,10 +29,6 @@ inputParser = linesOf instruction
                          , action 'F' $ Move F
                          ]
     action c f = f <$> (char c *> natural)
-
-data ShipState = ShipState { getDirection :: Direction
-                           , getPosition :: (Int, Int)
-                           }
 
 moveShipByInstructions :: [Instruction] -> (Int, Int)
 moveShipByInstructions = getPosition . foldl' moveShip ShipState{ getDirection=E, getPosition=(0,0) }
