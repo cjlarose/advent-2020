@@ -79,10 +79,7 @@ simulateRound :: SeatUpdateRule -> WaitingArea -> WaitingArea
 simulateRound f w@WaitingArea{getSeats=seats} = w { getSeats = Map.mapWithKey (f w) seats }
 
 occupied :: WaitingArea -> (Int, Int) -> Bool
-occupied waitingArea coord =
-  case Map.lookup coord $ getSeats waitingArea of
-    Just Occupied -> True
-    _ -> False
+occupied waitingArea = (== Occupied) . (getSeats waitingArea !)
 
 naiveRule :: WaitingArea -> SeatUpdateRule
 naiveRule originalW = updateSeat
