@@ -10,9 +10,7 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
 resultToBS :: ((String, String) -> String) -> Either String PuzzleAnswerPair -> LBS.ByteString
 resultToBS _ (Left err) = runPut $ putStringUtf8 err >> putCharUtf8 '\n'
-resultToBS f (Right (PuzzleAnswerPair answers)) = runPut $ do
-                                                             putStringUtf8 . f $ answers
-                                                             putCharUtf8 '\n'
+resultToBS f (Right (PuzzleAnswerPair answers)) = runPut $ (putStringUtf8 . f $ answers) >> putCharUtf8 '\n'
 
 main :: IO ()
 main = defaultMain =<< goldenTests
