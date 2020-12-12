@@ -5,7 +5,7 @@ module Advent2020.Day11
   ) where
 
 import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map)
+import Data.Map.Strict (Map, (!))
 import Data.Maybe (catMaybes, maybeToList)
 import Control.Monad (guard)
 import Text.Parsec.ByteString (Parser)
@@ -47,11 +47,11 @@ inputParser = toMap <$> linesOf row
                            }
 
 neighbors :: (Int, Int) -> WaitingArea -> [(Int, Int)]
-neighbors (i, j) WaitingArea{ getN=n, getM=m } = do
+neighbors (i, j) WaitingArea{ getSeats=seats } = do
   ii <- [i-1..i+1]
   jj <- [j-1..j+1]
   guard $ (i, j) /= (ii, jj)
-  guard $ ii < n && jj < m
+  guard $ (ii, jj) `Map.member` seats
   pure (ii, jj)
 
 firstVisibleSeatInDirection :: (Int, Int) -> (Int, Int) -> WaitingArea -> Maybe (Int, Int)
@@ -84,11 +84,16 @@ occupied waitingArea coord =
     Just Occupied -> True
     _ -> False
 
-naiveRule :: SeatUpdateRule
-naiveRule w pos Empty | not . any (occupied w) . neighbors pos $ w = Occupied
-                      | otherwise = Empty
-naiveRule w pos Occupied | (>= 4) . length . filter (occupied w) . neighbors pos $ w = Empty
-                         | otherwise = Occupied
+naiveRule :: WaitingArea -> SeatUpdateRule
+naiveRule originalW = updateSeat
+  where
+    neighborsMap :: Map (Int, Int) [(Int, Int)]
+    neighborsMap = Map.mapWithKey (\coord _ -> neighbors coord originalW) . getSeats $ originalW
+
+    updateSeat w pos Empty | not . any (occupied w) . (neighborsMap !) $ pos = Occupied
+                           | otherwise = Empty
+    updateSeat w pos Occupied | (>= 4) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
+                              | otherwise = Occupied
 
 realisticRule :: SeatUpdateRule
 realisticRule w pos Empty | not . any (occupied w) . visibleSeats pos $ w = Occupied
@@ -116,7 +121,7 @@ totalOccupied WaitingArea{getSeats=seats} = Map.foldl f 0 seats
 printResults :: WaitingArea -> PuzzleAnswerPair
 printResults waitingArea = PuzzleAnswerPair (part1, part2)
   where
-    part1 = maybe "no stable state" (show . totalOccupied) $ stableState naiveRule waitingArea
+    part1 = maybe "no stable state" (show . totalOccupied) $ stableState (naiveRule waitingArea) waitingArea
     part2 = maybe "no stable state" (show . totalOccupied) $ stableState realisticRule waitingArea
 
 solve :: IO (Either String PuzzleAnswerPair)
