@@ -95,11 +95,16 @@ naiveRule originalW = updateSeat
     updateSeat w pos Occupied | (>= 4) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
                               | otherwise = Occupied
 
-realisticRule :: SeatUpdateRule
-realisticRule w pos Empty | not . any (occupied w) . visibleSeats pos $ w = Occupied
-                          | otherwise = Empty
-realisticRule w pos Occupied | (>= 5) . length . filter (occupied w) . visibleSeats pos $ w = Empty
-                             | otherwise = Occupied
+realisticRule :: WaitingArea -> SeatUpdateRule
+realisticRule originalW = updateSeat
+  where
+    neighborsMap :: Map (Int, Int) [(Int, Int)]
+    neighborsMap = Map.mapWithKey (\coord _ -> visibleSeats coord originalW) . getSeats $ originalW
+
+    updateSeat w pos Empty | not . any (occupied w) . (neighborsMap !) $ pos = Occupied
+                           | otherwise = Empty
+    updateSeat w pos Occupied | (>= 5) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
+                              | otherwise = Occupied
 
 firstRepeatedValue :: Eq a => [a] -> Maybe a
 firstRepeatedValue [] = Nothing
@@ -122,7 +127,7 @@ printResults :: WaitingArea -> PuzzleAnswerPair
 printResults waitingArea = PuzzleAnswerPair (part1, part2)
   where
     part1 = maybe "no stable state" (show . totalOccupied) $ stableState (naiveRule waitingArea) waitingArea
-    part2 = maybe "no stable state" (show . totalOccupied) $ stableState realisticRule waitingArea
+    part2 = maybe "no stable state" (show . totalOccupied) $ stableState (realisticRule waitingArea) waitingArea
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 11
