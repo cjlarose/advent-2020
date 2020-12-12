@@ -40,7 +40,7 @@ moveShipByInstructions :: [Instruction] -> (Int, Int)
 moveShipByInstructions = getPosition . foldl' moveShip ShipState{ getDirection=E, getPosition=(0,0) }
   where
     moveShip :: ShipState -> Instruction -> ShipState
-    moveShip s@ShipState{getDirection=dir} (Move F x) = s { getPosition = getPosition $ moveShip s (Move dir x) }
+    moveShip s@ShipState{getPosition=pos,getDirection=dir} (Move F x) = s { getPosition=translate pos dir x }
     moveShip s@ShipState{getPosition=pos} (Move dir x) = s { getPosition=translate pos dir x }
 
     moveShip s@ShipState{getDirection=N} (RotateLeft 90) = s { getDirection=W }
