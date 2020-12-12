@@ -45,15 +45,17 @@ neighbors (i, j) WaitingArea{ getSeats=seats } = do
   maybeToList . Map.lookup (ii, jj) $ seats
 
 firstVisibleSeatInDirection :: (Int, Int) -> (Int, Int) -> WaitingArea -> Maybe Seat
-firstVisibleSeatInDirection (i, j) (di, dj) WaitingArea{getSeats=seats,getN=n,getM=m} = firstVisible coords
+firstVisibleSeatInDirection (i, j) (di, dj) waitingArea@WaitingArea{getN=n,getM=m} = firstVisible waitingArea coords
   where
     coords = takeWhile inBounds . drop 1 . iterate (\(ii, jj) -> (ii + di, jj + dj)) $ (i, j)
     inBounds (ii, jj) = ii >= 0 && ii < n && jj >= 0 && jj < m
-    firstVisible :: [(Int, Int)] -> Maybe Seat
-    firstVisible [] = Nothing
-    firstVisible (x:xs) = case Map.lookup x seats of
-                            Just seat -> Just seat
-                            Nothing -> firstVisible xs
+
+firstVisible :: WaitingArea -> [(Int, Int)] -> Maybe Seat
+firstVisible _ [] = Nothing
+firstVisible waitingArea@WaitingArea{getSeats=seats} (x:xs) =
+  case Map.lookup x seats of
+    Just seat -> Just seat
+    Nothing -> firstVisible waitingArea xs
 
 visibleSeats :: (Int, Int) -> WaitingArea -> [Seat]
 visibleSeats pos waitingArea = do
