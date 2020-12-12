@@ -30,18 +30,21 @@ inputParser = linesOf instruction
                          ]
     action c f = f <$> (char c *> natural)
 
-translate :: (Int, Int) -> Direction -> Natural -> (Int, Int)
-translate (i, j) N x = (i - fromIntegral x, j)
-translate (i, j) E x = (i, j + fromIntegral x)
-translate (i, j) S x = (i + fromIntegral x, j)
-translate (i, j) W x = (i, j - fromIntegral x)
+translate :: (Int, Int) -> (Int, Int) -> (Int, Int)
+translate (i, j) (di, dj) = (i + di, j + dj)
+
+translationVector :: Direction -> Natural -> (Int, Int)
+translationVector N x = (- fromIntegral x, 0)
+translationVector E x = (0, fromIntegral x)
+translationVector S x = (fromIntegral x, 0)
+translationVector W x = (0, - fromIntegral x)
 
 moveShipByInstructions :: [Instruction] -> (Int, Int)
 moveShipByInstructions = getPosition . foldl' moveShip ShipState{ getDirection=E, getPosition=(0,0) }
   where
     moveShip :: ShipState -> Instruction -> ShipState
-    moveShip s@ShipState{getPosition=pos,getDirection=dir} (Move F x) = s { getPosition=translate pos dir x }
-    moveShip s@ShipState{getPosition=pos} (Move dir x) = s { getPosition=translate pos dir x }
+    moveShip s@ShipState{getPosition=pos,getDirection=dir} (Move F x) = s { getPosition=translate pos $ translationVector dir x }
+    moveShip s@ShipState{getPosition=pos} (Move dir x) = s { getPosition=translate pos $ translationVector dir x }
 
     moveShip s@ShipState{getDirection=N} (RotateLeft 90) = s { getDirection=W }
     moveShip s@ShipState{getDirection=E} (RotateLeft 90) = s { getDirection=N }
@@ -74,7 +77,7 @@ moveShipByWaypointInstructions = getPosition . fst . foldl' moveShip' (ShipState
   where
     moveShip' :: (ShipState, (Int, Int)) -> Instruction -> (ShipState, (Int, Int))
     moveShip' (s@ShipState{getPosition=(i,j)}, (di, dj)) (Move F x) = (s { getPosition=(i + di * fromIntegral x, j + dj * fromIntegral x) }, (di, dj))
-    moveShip' (s, waypoint) (Move dir x) = (s, translate waypoint dir x)
+    moveShip' (s, waypoint) (Move dir x) = (s, translate waypoint $ translationVector dir x)
 
     moveShip' (s, (i, j)) (RotateLeft 90) = (s, (- j, i))
     moveShip' (s, (i, j)) (RotateLeft 180) = (s, (- i, - j))
