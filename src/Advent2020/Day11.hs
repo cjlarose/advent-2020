@@ -20,7 +20,7 @@ data Seat = Empty | Occupied deriving (Show, Eq)
 data WaitingArea = WaitingArea { getSeats :: Map (Int, Int) Seat
                                , getM :: Int
                                , getN :: Int } deriving (Eq)
-type SeatUpdateRule = WaitingArea -> (Int, Int) -> Seat -> Seat
+type SeatUpdateRule = WaitingArea -> Map (Int, Int) Seat
 
 instance Show WaitingArea where
   show waitingArea = unlines rows
@@ -76,7 +76,7 @@ visibleSeats pos waitingArea = do
   maybeToList . firstVisibleSeatInDirection pos dir $ waitingArea
 
 simulateRound :: SeatUpdateRule -> WaitingArea -> WaitingArea
-simulateRound f w@WaitingArea{getSeats=seats} = w { getSeats = Map.mapWithKey (f w) seats }
+simulateRound f w = w { getSeats = f w }
 
 occupied :: WaitingArea -> (Int, Int) -> Bool
 occupied waitingArea = (== Occupied) . (getSeats waitingArea !)
@@ -87,9 +87,12 @@ naiveRule originalW = updateSeat
     neighborsMap :: Map (Int, Int) [(Int, Int)]
     neighborsMap = Map.mapWithKey (\coord _ -> neighbors coord originalW) . getSeats $ originalW
 
-    updateSeat w pos Empty | not . any (occupied w) . (neighborsMap !) $ pos = Occupied
-                           | otherwise = Empty
-    updateSeat w pos Occupied | (>= 4) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
+    updateSeat :: WaitingArea -> Map (Int, Int) Seat
+    updateSeat w@WaitingArea{getSeats=seats} = Map.mapWithKey update seats
+      where
+        update pos Empty | not . any (occupied w) . (neighborsMap !) $ pos = Occupied
+                         | otherwise = Empty
+        update pos Occupied | (>= 4) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
                               | otherwise = Occupied
 
 realisticRule :: WaitingArea -> SeatUpdateRule
@@ -98,10 +101,13 @@ realisticRule originalW = updateSeat
     neighborsMap :: Map (Int, Int) [(Int, Int)]
     neighborsMap = Map.mapWithKey (\coord _ -> visibleSeats coord originalW) . getSeats $ originalW
 
-    updateSeat w pos Empty | not . any (occupied w) . (neighborsMap !) $ pos = Occupied
-                           | otherwise = Empty
-    updateSeat w pos Occupied | (>= 5) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
-                              | otherwise = Occupied
+    updateSeat :: WaitingArea -> Map (Int, Int) Seat
+    updateSeat w@WaitingArea{getSeats=seats} = Map.mapWithKey update seats
+      where
+        update pos Empty | not . any (occupied w) . (neighborsMap !) $ pos = Occupied
+                         | otherwise = Empty
+        update pos Occupied | (>= 5) . length . filter (occupied w) . (neighborsMap !) $ pos = Empty
+                            | otherwise = Occupied
 
 firstRepeatedValue :: Eq a => [a] -> Maybe a
 firstRepeatedValue [] = Nothing
