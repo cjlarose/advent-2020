@@ -3,7 +3,18 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    name: arithmoi
+    version: 0.11.0.1
+    git: https://github.com/Bodigrim/arithmoi.git
+    pantry-tree:
+      size: 10457
+      sha256: 31677d6a943f2c306cbf70fe06fa9bc4d90df1bbaf1a298ef6a32fcb3d20cfe2
+    commit: 5fffee910248ad1bdc9b27523da246c598c77980
+  original:
+    git: https://github.com/Bodigrim/arithmoi.git
+    commit: 5fffee910248ad1bdc9b27523da246c598c77980
 snapshots:
 - completed:
     size: 532832

@@ -5,6 +5,8 @@ module Advent2020.Day13
 import Numeric.Natural (Natural)
 import Data.List (find)
 import Data.Maybe (isJust)
+import Control.Monad (foldM)
+import Math.NumberTheory.Moduli.Chinese (chinese)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine)
 import Text.Parsec ((<|>), sepBy1, eof)
@@ -31,22 +33,9 @@ earliestTime start busIds = go start
              Just busId -> (t, busId)
              Nothing -> go (succ t)
 
--- https://stackoverflow.com/a/35529381/1231384
-crt :: (Integral a, Foldable t) => t (a, a) -> (a, a)
-crt = foldr go (0, 1)
-    where
-    go (r1, m1) (r2, m2) = (r `mod` m, m)
-        where
-        r = r2 + m2 * (r1 - r2) * (m2 `inv` m1)
-        m = m2 * m1
 
-    -- Modular Inverse
-    a `inv` m = let (_, i, _) = gcd a m in i `mod` m
-
-    -- Extended Euclidean Algorithm
-    gcd 0 b = (b, 0, 1)
-    gcd a b = (g, t - (b `div` a) * s, s)
-        where (g, s, t) = gcd (b `mod` a) a
+solutionToSystemOfCongruences :: [(Integer, Integer)] -> Maybe (Integer, Integer)
+solutionToSystemOfCongruences = foldM chinese (0, 1)
 
 -- 17,x,13,19
 -- t is congruent to 0 (mod 17)
@@ -60,7 +49,7 @@ earliestPossibleInSequenceDepartures :: [(Int, BusId)] -> Integer
 earliestPossibleInSequenceDepartures xs = k
   where
     congruences = map (\(offset, BusId modulus) -> ((- fromIntegral offset) `mod` fromIntegral modulus, fromIntegral modulus)) xs
-    (k, _) = crt congruences
+    Just (k, _) = solutionToSystemOfCongruences congruences
 
 printResults :: (Natural, [(Int, BusId)]) -> PuzzleAnswerPair
 printResults (earliestPossibleTime, busIds) = PuzzleAnswerPair (part1, part2)
