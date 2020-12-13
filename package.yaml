@@ -25,6 +25,7 @@ dependencies:
 - bytestring
 - containers
 - filepath
+- hashtables
 - monad-loops
 - parsec
 - tasty
