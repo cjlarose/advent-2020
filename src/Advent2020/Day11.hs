@@ -26,8 +26,8 @@ type SeatUpdateRule = WaitingArea -> Set (Int, Int)
 instance Show WaitingArea where
   show waitingArea = unlines rows
     where
-      rows = map row [0..getN waitingArea]
-      row i = map (\j -> toChar . seatAt (i, j) $ waitingArea) [0..getM waitingArea]
+      rows = map row [0..getN waitingArea - 1]
+      row i = map (\j -> toChar . seatAt (i, j) $ waitingArea) [0..getM waitingArea - 1]
       toChar (Just Empty) = 'L'
       toChar (Just Occupied) = '#'
       toChar Nothing = '.'
