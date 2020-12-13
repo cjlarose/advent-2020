@@ -48,7 +48,11 @@ solutionToSystemOfCongruences = foldM chinese (0, 1)
 earliestPossibleInSequenceDepartures :: [(Int, BusId)] -> Integer
 earliestPossibleInSequenceDepartures xs = k
   where
-    congruences = map (\(offset, BusId modulus) -> ((- fromIntegral offset) `mod` fromIntegral modulus, fromIntegral modulus)) xs
+    toCongruence (offset, BusId busId) = (residue, modulus)
+      where
+        modulus = fromIntegral busId
+        residue = (- fromIntegral offset) `mod` modulus
+    congruences = map toCongruence xs
     Just (k, _) = solutionToSystemOfCongruences congruences
 
 printResults :: (Natural, [(Int, BusId)]) -> PuzzleAnswerPair
