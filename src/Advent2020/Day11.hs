@@ -2,6 +2,7 @@ module Advent2020.Day11
   ( solve
   ) where
 
+import Data.List (foldl')
 import qualified Data.Set as Set
 import Data.Set (Set, member)
 import qualified Data.Map.Strict as Map
@@ -93,12 +94,16 @@ naiveRule originalW = updateSeat
     neighborsMap :: Map (Int, Int) [(Int, Int)]
     neighborsMap = Map.fromSet (`neighbors` originalW) . getSeats $ originalW
 
+    initMap = Map.fromSet (const 0) . getSeats $ originalW
+
     updateSeat :: WaitingArea -> Set (Int, Int)
-    updateSeat w@WaitingArea{getSeats=seats} = Set.filter isNowOccupied seats
+    updateSeat w = newOccupied
       where
-        isNowOccupied :: (Int, Int) -> Bool
-        isNowOccupied pos | occupied w pos = (< 4) . length . filter (occupied w) . (neighborsMap !) $ pos
-                          | otherwise = not . any (occupied w) . (neighborsMap !) $ pos
+        entries = concatMap (neighborsMap !) . Set.toList . getOccupiedSeats $ w
+        occupiedNeighbors = foldl' (\acc coord -> Map.adjust (+ 1) coord acc) initMap entries
+        newOccupied = Map.foldlWithKey g Set.empty occupiedNeighbors
+        g acc coord val | coord `member` getOccupiedSeats w = if val < 4 then Set.insert coord acc else acc
+                        | otherwise = if val == 0 then Set.insert coord acc else acc
 
 realisticRule :: WaitingArea -> SeatUpdateRule
 realisticRule originalW = updateSeat
