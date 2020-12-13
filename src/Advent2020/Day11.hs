@@ -9,7 +9,7 @@ import Data.Set (Set, member)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map, (!))
 import Data.Maybe (catMaybes, maybeToList)
-import Control.Monad (guard)
+import Control.Monad (guard, forM_)
 import Control.Monad.ST (runST)
 import qualified Data.HashTable.Class as HashTable
 import qualified Data.HashTable.ST.Cuckoo as Cuckoo
@@ -102,9 +102,10 @@ naiveRule originalW = updateSeat
     updateSeat w = runST $ do
       occupiedNeighbors <- Cuckoo.newSized . Set.size . getSeats $ originalW
       mapM_ (\coord -> Cuckoo.insert occupiedNeighbors coord 0) . getSeats $ originalW
-      let update coord = Cuckoo.mutate occupiedNeighbors coord (\(Just val) -> (Just (val + 1), ()))
-      let entries = concatMap (neighborsMap !) . Set.toList . getOccupiedSeats $ w
-      mapM_ update entries
+      let increment coord = Cuckoo.mutate occupiedNeighbors coord (\(Just val) -> (Just (val + 1), ()))
+      forM_ (getOccupiedSeats w) $ \coord -> do
+        let neighbors = neighborsMap ! coord
+        forM_ neighbors increment
       let g acc coord val | coord `member` getOccupiedSeats w = if val < 4 then Set.insert coord acc else acc
                           | otherwise = if val == 0 then Set.insert coord acc else acc
       Cuckoo.foldM (\acc (coord, val) -> pure . g acc coord $ val) Set.empty occupiedNeighbors
