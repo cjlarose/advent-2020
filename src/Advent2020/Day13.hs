@@ -3,7 +3,8 @@ module Advent2020.Day13
   ) where
 
 import Numeric.Natural (Natural)
-import Data.List (find)
+import Data.List (minimumBy)
+import Data.Ord (comparing)
 import Data.Maybe (isJust)
 import Control.Monad (foldM)
 import Math.NumberTheory.Moduli.Chinese (chinese)
@@ -23,16 +24,16 @@ inputParser = (,) <$> natural <* endOfLine <*> busIds <* endOfLine <* eof
     busIds = map (\(i, Just id) -> (i, id)) . filter (isJust . snd) . zip [0..] <$> sepBy1 possibleBusId (char ',')
     possibleBusId = (Nothing <$ char 'x') <|> (Just . BusId <$> natural)
 
-multipleOf :: Natural -> Natural -> Bool
-multipleOf x k = x `mod` k == 0
+-- | leastMultipleGreaterThanOrEqualTo k n returns the least z such that z >= k
+-- and z `mod` n = 0
+leastMultipleGreaterThanOrEqualTo :: Integer -> Integer -> Integer
+leastMultipleGreaterThanOrEqualTo k n = k + n - (k `mod` n)
 
 earliestTime :: Natural -> [BusId] -> (Natural, BusId)
-earliestTime start busIds = go start
+earliestTime start = minimumBy (comparing fst) . map (\b -> (nextDeparture b, b))
   where
-    go t = case find (\(BusId id) -> t `multipleOf` id) busIds of
-             Just busId -> (t, busId)
-             Nothing -> go (succ t)
-
+    nextDeparture :: BusId -> Natural
+    nextDeparture (BusId id) = fromIntegral . leastMultipleGreaterThanOrEqualTo (fromIntegral start) . fromIntegral $ id
 
 solutionToSystemOfCongruences :: [(Integer, Integer)] -> Maybe (Integer, Integer)
 solutionToSystemOfCongruences = foldM chinese (0, 1)
