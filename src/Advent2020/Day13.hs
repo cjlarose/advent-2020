@@ -59,7 +59,7 @@ crt = foldr go (0, 1)
 earliestPossibleInSequenceDepartures :: [(Int, BusId)] -> Integer
 earliestPossibleInSequenceDepartures xs = k
   where
-    congruences = map (\(offset, BusId modulus) -> (2 * fromIntegral modulus - fromIntegral offset, fromIntegral modulus)) xs
+    congruences = map (\(offset, BusId modulus) -> ((- fromIntegral offset) `mod` fromIntegral modulus, fromIntegral modulus)) xs
     (k, _) = crt congruences
 
 printResults :: (Natural, [(Int, BusId)]) -> PuzzleAnswerPair
