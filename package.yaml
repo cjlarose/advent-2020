@@ -30,6 +30,7 @@ dependencies:
 - parsec
 - tasty
 - tasty-golden
+- vector
 
 library:
   source-dirs: src

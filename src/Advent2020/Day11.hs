@@ -9,10 +9,9 @@ import Data.Set (Set, member)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map, (!))
 import Data.Maybe (catMaybes, maybeToList)
-import Control.Monad (guard, forM_)
+import Control.Monad (guard, forM_, foldM)
 import Control.Monad.ST (runST)
-import qualified Data.HashTable.Class as HashTable
-import qualified Data.HashTable.ST.Cuckoo as Cuckoo
+import qualified Data.Vector.Unboxed.Mutable as UMV
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec (many1, (<|>), getPosition, sourceLine, sourceColumn)
 import Text.Parsec.Char (char)
@@ -98,17 +97,18 @@ naiveRule originalW = updateSeat
     neighborsMap :: Map (Int, Int) [(Int, Int)]
     neighborsMap = Map.fromSet (`neighbors` originalW) . getSeats $ originalW
 
+
     updateSeat :: WaitingArea -> Set (Int, Int)
     updateSeat w = runST $ do
-      occupiedNeighbors <- Cuckoo.newSized . Set.size . getSeats $ originalW
-      mapM_ (\coord -> Cuckoo.insert occupiedNeighbors coord 0) . getSeats $ originalW
-      let increment coord = Cuckoo.mutate occupiedNeighbors coord (\(Just val) -> (Just (val + 1), ()))
+      occupiedNeighbors <- UMV.replicate (getN w * getM w) (0 :: Int)
+      let keyFor (i, j) = i * getN w + j
+      let increment coord = UMV.modify occupiedNeighbors (1 +) (keyFor coord)
       forM_ (getOccupiedSeats w) $ \coord -> do
         let neighbors = neighborsMap ! coord
         forM_ neighbors increment
       let g acc coord val | coord `member` getOccupiedSeats w = if val < 4 then Set.insert coord acc else acc
                           | otherwise = if val == 0 then Set.insert coord acc else acc
-      Cuckoo.foldM (\acc (coord, val) -> pure . g acc coord $ val) Set.empty occupiedNeighbors
+      foldM (\acc coord -> UMV.read occupiedNeighbors (keyFor coord) >>= (\val -> pure $ g acc coord val)) Set.empty . getSeats $ originalW
 
 realisticRule :: WaitingArea -> SeatUpdateRule
 realisticRule originalW = updateSeat

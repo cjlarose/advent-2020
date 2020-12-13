@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b0d56fc44683f26cb35ec876ff43be554370ae6201d5a377f42f4c75fccf11dd
+-- hash: a9e5115e759b19327a39e0948ac3e10dc7a345c94ac31ade832bb9e220606a6c
 
 name:           advent2020
 version:        0.1.0.0
@@ -59,6 +59,7 @@ library
     , parsec
     , tasty
     , tasty-golden
+    , vector
   default-language: Haskell2010
 
 executable advent2020-exe
@@ -80,6 +81,7 @@ executable advent2020-exe
     , parsec
     , tasty
     , tasty-golden
+    , vector
   default-language: Haskell2010
 
 test-suite advent2020-test
@@ -102,4 +104,5 @@ test-suite advent2020-test
     , parsec
     , tasty
     , tasty-golden
+    , vector
   default-language: Haskell2010
