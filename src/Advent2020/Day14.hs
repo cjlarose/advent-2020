@@ -53,7 +53,7 @@ executeProgram program modifyValue decodeAddress = runST $ do
       f mask (Write (Address addrSeed) val) = do
         let addresses = decodeAddress mask . toInteger $ addrSeed
         forM_ addresses $ \addr -> do
-          Cuckoo.insert memory addr (modifyValue mask val)
+          Cuckoo.insert memory addr . modifyValue mask $ val
         pure mask
   foldM_ f (Mask "") program
   Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
