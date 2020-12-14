@@ -4,7 +4,7 @@ module Advent2020.Day14
 
 import Numeric.Natural (Natural)
 import Data.List (foldl')
-import Data.Bits ((.|.), (.&.), shiftL, complement, testBit)
+import Data.Bits ((.|.), (.&.), shiftL, testBit)
 import Control.Monad (foldM_, forM_, foldM)
 import Control.Monad.ST (runST)
 import qualified Data.HashTable.ST.Cuckoo as Cuckoo
@@ -34,12 +34,12 @@ inputParser = linesOf instruction
 -- The setting mask has a 1 in every position we want to set to 1, 0s
 -- elsewhere.
 parseVersion1Mask :: Mask -> MaskV1
-parseVersion1Mask (Mask xs) = let (c, s) = foldl' f (0, 0) xs in MaskV1 { getClearingMask=complement c, getSettingMask=s }
+parseVersion1Mask (Mask xs) = let (c, s) = foldl' f (0, 0) xs in MaskV1 { getClearingMask=c, getSettingMask=s }
   where
     f :: (Integer, Integer) -> Char -> (Integer, Integer)
-    f (clearMask, setMask) '0' = (shiftL clearMask 1 .|. 1, shiftL setMask 1)
-    f (clearMask, setMask) '1' = (shiftL clearMask 1, shiftL setMask 1 .|. 1)
-    f (clearMask, setMask) 'X' = (shiftL clearMask 1, shiftL setMask 1)
+    f (clearMask, setMask) '0' = (shiftL clearMask 1, shiftL setMask 1)
+    f (clearMask, setMask) '1' = (shiftL clearMask 1 .|. 1, shiftL setMask 1 .|. 1)
+    f (clearMask, setMask) 'X' = (shiftL clearMask 1 .|. 1, shiftL setMask 1)
 
 applyMaskV1 :: Mask -> Integer -> Integer
 applyMaskV1 mask = setBits . clearBits
