@@ -4,8 +4,8 @@ module Advent2020.Day14
 
 import Numeric.Natural (Natural)
 import Data.List (foldl')
-import Data.Bits ((.|.), (.&.), shiftL, complement)
-import Control.Monad (foldM_)
+import Data.Bits ((.|.), (.&.), shiftL, complement, testBit)
+import Control.Monad (foldM_, forM_, foldM)
 import Control.Monad.ST (runST)
 import qualified Data.HashTable.ST.Cuckoo as Cuckoo
 import Text.Parsec.ByteString (Parser)
@@ -46,6 +46,14 @@ applyMaskV1 mask = setBits . clearBits
     clearBits = (.&.) (getClearingMask maskV1)
     setBits = (.|.) (getSettingMask maskV1)
 
+applyMaskV2 :: Mask -> Integer -> [Integer]
+applyMaskV2 (Mask mask) val = do
+  let f :: Integer -> (Char, Bool) -> [Integer]
+      f acc ('0', v) = if v then [shiftL acc 1 .|. 1] else [shiftL acc 1]
+      f acc ('1', _) = [shiftL acc 1 .|. 1]
+      f acc ('X', _) = [shiftL acc 1, shiftL acc 1 .|. 1]
+  foldM f 0 . zip mask . map (testBit val) $ [35,34..0]
+
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> Integer
 executeProgram program = runST $ do
@@ -57,11 +65,24 @@ executeProgram program = runST $ do
   foldM_ f (Mask "") program
   Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
 
+-- | Returns the sum of values in memory
+executeV2Program :: [Instruction] -> Integer
+executeV2Program program = runST $ do
+  memory <- Cuckoo.new
+  let f _ (SetMask mask) = pure mask
+      f mask (Write (Address addrSeed) val) = do
+        let addresses = applyMaskV2 mask . toInteger $ addrSeed
+        forM_ addresses $ \addr -> do
+          Cuckoo.insert memory (toInteger addr) val
+        pure mask
+  foldM_ f (Mask "") program
+  Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
+
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . executeProgram $ program
-    part2 = "not yet implemented"
+    part2 = show . executeV2Program $ program
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 14
