@@ -17,7 +17,8 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf, natural, word, integerWithOptionalLeadingSign)
 
 newtype Address = Address Natural deriving Show
-data Mask = Mask { getClearingMask :: Integer, getSettingMask :: Integer } deriving Show
+data MaskV1 = MaskV1 { getClearingMask :: Integer, getSettingMask :: Integer } deriving Show
+newtype Mask = Mask String deriving Show
 data Instruction = SetMask Mask | Write Address Integer deriving Show
 
 -- and with 0s to clear in those spots, 1s where we want them to be unchanged
@@ -27,22 +28,23 @@ inputParser :: Parser [Instruction]
 inputParser = linesOf instruction 
   where
     instruction = try maskAssignment <|> writeToAddress
-    maskAssignment = SetMask <$> (string "mask = " *> (parseMask <$> word))
+    maskAssignment = SetMask <$> (string "mask = " *> (Mask <$> word))
     writeToAddress = Write <$> (string "mem[" *> (Address <$> natural)) <*> (string "] = " *> integerWithOptionalLeadingSign)
-    parseMask xs = let (c, s) = foldl' f (0, 0) xs in Mask { getClearingMask=complement c, getSettingMask=s }
+
+parseVersion1Mask :: Mask -> MaskV1
+parseVersion1Mask (Mask xs) = let (c, s) = foldl' f (0, 0) xs in MaskV1 { getClearingMask=complement c, getSettingMask=s }
+  where
     f :: (Integer, Integer) -> Char -> (Integer, Integer)
     f (clearMask, setMask) '0' = (shiftL clearMask 1 .|. 1, shiftL setMask 1)
     f (clearMask, setMask) '1' = (shiftL clearMask 1, shiftL setMask 1 .|. 1)
     f (clearMask, setMask) 'X' = (shiftL clearMask 1, shiftL setMask 1)
 
-emptyMask :: Mask
-emptyMask = Mask { getClearingMask=0, getSettingMask=0 }
-
-applyMask :: Mask -> Integer -> Integer
-applyMask mask = setBits . clearBits
+applyMaskV1 :: Mask -> Integer -> Integer
+applyMaskV1 mask = setBits . clearBits
   where
-    clearBits = (.&.) (getClearingMask mask)
-    setBits = (.|.) (getSettingMask mask)
+    maskV1 = parseVersion1Mask mask
+    clearBits = (.&.) (getClearingMask maskV1)
+    setBits = (.|.) (getSettingMask maskV1)
 
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> Integer
@@ -50,9 +52,9 @@ executeProgram program = runST $ do
   memory <- Cuckoo.new
   let f _ (SetMask mask) = pure mask
       f mask (Write (Address addr) val) = do
-        Cuckoo.insert memory (toInteger addr) . applyMask mask $ val
+        Cuckoo.insert memory (toInteger addr) . applyMaskV1 mask $ val
         pure mask
-  foldM_ f emptyMask program
+  foldM_ f (Mask "") program
   Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
 
 printResults :: [Instruction] -> PuzzleAnswerPair
