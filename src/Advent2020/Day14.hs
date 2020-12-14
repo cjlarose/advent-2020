@@ -34,8 +34,8 @@ inputParser = linesOf instruction
 applyMaskV1 :: Mask -> Integer -> Integer
 applyMaskV1 (Mask mask) = setBits . clearBits
   where
-    clearBits = (.&.) $ foldl' (\acc b -> case b of '0' -> shiftL acc 1; _ -> shiftL acc 1 .|. 1) (0 :: Integer) mask
-    setBits = (.|.) $ foldl' (\acc b -> case b of '1' -> shiftL acc 1 .|. 1; _ -> shiftL acc 1) (0 :: Integer) mask
+    clearBits = (.&.) $ foldl' (\acc b -> shiftL acc 1 .|. (if b == '0' then 0 else 1)) (0 :: Integer) mask
+    setBits = (.|.) $ foldl' (\acc b -> shiftL acc 1 .|. (if b == '1' then 1 else 0)) (0 :: Integer) mask
 
 applyMaskV2 :: Mask -> Integer -> [Integer]
 applyMaskV2 (Mask mask) val = do
