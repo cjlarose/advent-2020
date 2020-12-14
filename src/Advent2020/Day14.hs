@@ -21,9 +21,6 @@ data MaskV1 = MaskV1 { getClearingMask :: Integer, getSettingMask :: Integer } d
 newtype Mask = Mask String deriving Show
 data Instruction = SetMask Mask | Write Address Integer deriving Show
 
--- and with 0s to clear in those spots, 1s where we want them to be unchanged
--- to set bits, execute OR
-
 inputParser :: Parser [Instruction]
 inputParser = linesOf instruction 
   where
@@ -31,6 +28,11 @@ inputParser = linesOf instruction
     maskAssignment = SetMask <$> (string "mask = " *> (Mask <$> word))
     writeToAddress = Write <$> (string "mem[" *> (Address <$> natural)) <*> (string "] = " *> integerWithOptionalLeadingSign)
 
+-- | Constructs a version 1 mask given a mask in its string form. A verison 1
+-- mask is composed to two parts: a clearing mask and setting mask. The
+-- clearing mask has a 0 in every bit position we want to clear, 1s elsewhere.
+-- The setting mask has a 1 in every position we want to set to 1, 0s
+-- elsewhere.
 parseVersion1Mask :: Mask -> MaskV1
 parseVersion1Mask (Mask xs) = let (c, s) = foldl' f (0, 0) xs in MaskV1 { getClearingMask=complement c, getSettingMask=s }
   where
