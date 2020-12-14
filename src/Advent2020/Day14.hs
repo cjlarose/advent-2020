@@ -46,25 +46,14 @@ applyMaskV2 (Mask mask) val = do
   foldM f 0 . zip mask . map (testBit val) $ [35,34..0]
 
 -- | Returns the sum of values in memory
-executeProgram :: [Instruction] -> Integer
-executeProgram program = runST $ do
-  memory <- Cuckoo.new
-  let f _ (SetMask mask) = pure mask
-      f mask (Write (Address addr) val) = do
-        Cuckoo.insert memory (toInteger addr) . applyMaskV1 mask $ val
-        pure mask
-  foldM_ f (Mask "") program
-  Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
-
--- | Returns the sum of values in memory
-executeV2Program :: [Instruction] -> Integer
-executeV2Program program = runST $ do
+executeProgram :: [Instruction] -> (Mask -> Integer -> Integer) -> (Mask -> Integer -> [Integer]) -> Integer
+executeProgram program modifyValue decodeAddress = runST $ do
   memory <- Cuckoo.new
   let f _ (SetMask mask) = pure mask
       f mask (Write (Address addrSeed) val) = do
-        let addresses = applyMaskV2 mask . toInteger $ addrSeed
+        let addresses = decodeAddress mask . toInteger $ addrSeed
         forM_ addresses $ \addr -> do
-          Cuckoo.insert memory (toInteger addr) val
+          Cuckoo.insert memory (toInteger addr) (modifyValue mask val)
         pure mask
   foldM_ f (Mask "") program
   Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
@@ -72,8 +61,8 @@ executeV2Program program = runST $ do
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . executeProgram $ program
-    part2 = show . executeV2Program $ program
+    part1 = show $ executeProgram program applyMaskV1 (\_ x -> [x])
+    part2 = show $ executeProgram program (const id) applyMaskV2
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 14
