@@ -15,7 +15,7 @@ import Text.Parsec.ByteString (Parser)
 natural :: Parser Natural
 natural = read <$> many1 digit
 
-integerWithOptionalLeadingSign :: Parser Int
+integerWithOptionalLeadingSign :: Integral a => Parser a
 integerWithOptionalLeadingSign = (*) <$> option 1 sign <*> (fromIntegral <$> natural)
   where
     sign = (-1 <$ char '-') <|> (1 <$ char '+')
