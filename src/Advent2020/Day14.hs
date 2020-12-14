@@ -61,7 +61,7 @@ executeProgram program modifyValue decodeAddress = runST $ do
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show $ executeProgram program applyMaskV1 (\_ x -> [x])
+    part1 = show $ executeProgram program applyMaskV1 (const pure)
     part2 = show $ executeProgram program (const id) applyMaskV2
 
 solve :: IO (Either String PuzzleAnswerPair)
