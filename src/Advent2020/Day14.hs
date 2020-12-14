@@ -39,11 +39,11 @@ applyMaskV1 (Mask mask) = setBits . clearBits
 
 applyMaskV2 :: Mask -> Integer -> [Integer]
 applyMaskV2 (Mask mask) val = do
-  let f :: Integer -> (Char, Bool) -> [Integer]
-      f acc ('0', v) = if v then [shiftL acc 1 .|. 1] else [shiftL acc 1]
+  let f :: Integer -> (Char, Int) -> [Integer]
+      f acc ('0', v) = [shiftL acc 1 .|. fromIntegral v]
       f acc ('1', _) = [shiftL acc 1 .|. 1]
       f acc ('X', _) = [shiftL acc 1, shiftL acc 1 .|. 1]
-  foldM f 0 . zip mask . map (testBit val) $ [35,34..0]
+  foldM f 0 . zip mask . map (fromEnum . testBit val) $ [35,34..0]
 
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> (Mask -> Integer -> Integer) -> (Mask -> Integer -> [Integer]) -> Integer
