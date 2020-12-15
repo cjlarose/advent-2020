@@ -5,7 +5,7 @@ module Advent2020.Day14
 import Numeric.Natural (Natural)
 import Data.Bits ((.|.), (.&.), testBit)
 import Control.Monad (foldM_, forM_, foldM)
-import Control.Monad.ST (runST)
+import Control.Monad.ST (ST, runST)
 import qualified Data.HashTable.ST.Cuckoo as Cuckoo
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string)
@@ -46,17 +46,19 @@ applyMaskV2 (Mask mask) val = do
   let bitPatterns = foldM f [] . zip (reverse mask) . map (testBit val) $ [0..]
   map fromBits bitPatterns
 
+executeInstruction :: (Mask -> Integer -> Integer) -> (Mask -> Integer -> [Integer]) -> Cuckoo.HashTable s Integer Integer -> Mask -> Instruction -> ST s Mask
+executeInstruction _ _ _ _ (SetMask mask) = pure mask
+executeInstruction modifyValue decodeAddress memory mask (Write (Address addrSeed) val) = do
+  let addresses = decodeAddress mask . toInteger $ addrSeed
+  forM_ addresses $ \addr -> do
+    Cuckoo.insert memory addr . modifyValue mask $ val
+  pure mask
+
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> (Mask -> Integer -> Integer) -> (Mask -> Integer -> [Integer]) -> Integer
 executeProgram program modifyValue decodeAddress = runST $ do
   memory <- Cuckoo.new
-  let f _ (SetMask mask) = pure mask
-      f mask (Write (Address addrSeed) val) = do
-        let addresses = decodeAddress mask . toInteger $ addrSeed
-        forM_ addresses $ \addr -> do
-          Cuckoo.insert memory addr . modifyValue mask $ val
-        pure mask
-  foldM_ f (Mask "") program
+  foldM_ (executeInstruction modifyValue decodeAddress memory) (Mask "") program
   Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
 
 printResults :: [Instruction] -> PuzzleAnswerPair
