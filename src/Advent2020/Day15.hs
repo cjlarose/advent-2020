@@ -3,7 +3,7 @@ module Advent2020.Day15
   ) where
 
 import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map)
+import Data.Map.Strict (Map, (!))
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine)
 import Text.Parsec (sepBy1, eof)
@@ -26,7 +26,7 @@ spokenAt k inits = go (length inits) (last inits) mostRecentIndex
       | i == k = last
       | otherwise = go (i + 1) next newAcc
           where
-            next = case Map.findWithDefault [] last acc of
+            next = case acc ! last of
                      (j:k:_) -> j - k
                      _ -> 0
             newAcc = Map.alter (Just . maybe [i] (\(x:_) -> [i, x])) next acc
