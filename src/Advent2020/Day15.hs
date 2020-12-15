@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Advent2020.Day15
   ( solve
   ) where
@@ -28,10 +30,7 @@ spokenAt k inits = runST $ do
             let next = case prevs of
                          Just (j:k:_) -> j - k
                          _ -> 0
-            current <- Cuckoo.lookup indices next
-            case current of
-              Just (x:_) -> Cuckoo.insert indices next [i, x]
-              _ -> Cuckoo.insert indices next [i]
+            Cuckoo.mutate indices next ((,()) . Just . maybe [i] (i :))
             go next (i + 1)
   go (last inits) (length inits)
 
