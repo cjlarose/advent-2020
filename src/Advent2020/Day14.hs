@@ -14,7 +14,7 @@ import Text.Parsec ((<|>), try)
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf, natural, word, integerWithOptionalLeadingSign)
-import Advent.BitUtils ((<<|), fromBits)
+import Advent.BitUtils (fromBits)
 
 newtype Address = Address Natural deriving Show
 newtype Mask = Mask String deriving Show
@@ -39,11 +39,12 @@ applyMaskV1 (Mask mask) = setBits . clearBits
 
 applyMaskV2 :: Mask -> Integer -> [Integer]
 applyMaskV2 (Mask mask) val = do
-  let f :: Integer -> (Char, Int) -> [Integer]
-      f acc ('0', v) = [acc <<| fromIntegral v]
-      f acc ('1', _) = [acc <<| 1]
-      f acc ('X', _) = (<<|) acc <$> [0, 1]
-  foldM f 0 . zip mask . map (fromEnum . testBit val) $ [35,34..0]
+  let f :: [Bool] -> (Char, Bool) -> [[Bool]]
+      f acc ('0', v) = pure $ acc ++ [v]
+      f acc ('1', _) = pure $ acc ++ [True]
+      f acc ('X', _) = (++) acc <$> [[False], [True]]
+  let bitPatterns = foldM f [] . zip mask . map (testBit val) $ [35,34..0]
+  map fromBits bitPatterns
 
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> (Mask -> Integer -> Integer) -> (Mask -> Integer -> [Integer]) -> Integer
