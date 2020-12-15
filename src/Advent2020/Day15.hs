@@ -29,7 +29,7 @@ spokenAt k inits = go (length inits) (last inits) mostRecentIndex
             next = case Map.findWithDefault [] last acc of
                      (j:k:_) -> j - k
                      _ -> 0
-            newAcc = Map.alter (Just . maybe [i] (i :)) next acc
+            newAcc = Map.alter (Just . maybe [i] (\(x:_) -> [i, x])) next acc
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults starting = PuzzleAnswerPair (part1, part2)
