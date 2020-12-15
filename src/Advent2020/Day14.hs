@@ -2,11 +2,12 @@ module Advent2020.Day14
   ( solve
   ) where
 
+import qualified Data.Map.Strict as Map
+import Data.Map.Strict (Map)
 import Numeric.Natural (Natural)
 import Data.Bits ((.|.), (.&.), testBit)
-import Control.Monad (foldM_, forM_, foldM)
-import Control.Monad.ST (ST, runST)
-import qualified Data.HashTable.ST.Cuckoo as Cuckoo
+import Control.Monad (foldM)
+import Data.Foldable (foldl')
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string)
 import Text.Parsec ((<|>), try)
@@ -49,20 +50,21 @@ applyMaskV2 (Mask mask) val = do
   let bitPatterns = foldM f [] . zip (reverse mask) . map (testBit val) $ [0..]
   map fromBits bitPatterns
 
-executeInstruction :: ProgramBehavior -> Cuckoo.HashTable s Integer Integer -> Mask -> Instruction -> ST s Mask
-executeInstruction _ _ _ (SetMask mask) = pure mask
-executeInstruction behavior memory mask (Write (Address addrSeed) val) = do
-  let addresses = getAddressDecoder behavior mask . toInteger $ addrSeed
-  forM_ addresses $ \addr -> do
-    Cuckoo.insert memory addr . getValueTransformer behavior mask $ val
-  pure mask
+executeInstruction :: ProgramBehavior -> Map Integer Integer -> Mask -> Instruction -> (Map Integer Integer, Mask)
+executeInstruction _ memory _ (SetMask mask) = (memory, mask)
+executeInstruction behavior memory mask (Write (Address addrSeed) val) = (newMemory, mask)
+  where
+    memoryValue = getValueTransformer behavior mask val
+    addresses = getAddressDecoder behavior mask . toInteger $ addrSeed
+    newMemory = foldr (`Map.insert` memoryValue) memory addresses
 
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> ProgramBehavior -> Integer
-executeProgram program behavior = runST $ do
-  memory <- Cuckoo.new
-  foldM_ (executeInstruction behavior memory) (Mask "") program
-  Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
+executeProgram program behavior = Map.foldr (+) 0 memory
+  where
+    (memory, _) = foldl' (\(memory, mask) instruction -> executeInstruction behavior memory mask instruction)
+                    (Map.empty, Mask "")
+                    program
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
