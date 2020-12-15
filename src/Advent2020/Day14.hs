@@ -3,7 +3,6 @@ module Advent2020.Day14
   ) where
 
 import Numeric.Natural (Natural)
-import Data.List (foldl')
 import Data.Bits ((.|.), (.&.), testBit)
 import Control.Monad (foldM_, forM_, foldM)
 import Control.Monad.ST (runST)
@@ -15,7 +14,7 @@ import Text.Parsec ((<|>), try)
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf, natural, word, integerWithOptionalLeadingSign)
-import Advent.BitUtils ((<<|))
+import Advent.BitUtils ((<<|), fromBits)
 
 newtype Address = Address Natural deriving Show
 newtype Mask = Mask String deriving Show
@@ -35,8 +34,8 @@ inputParser = linesOf instruction
 applyMaskV1 :: Mask -> Integer -> Integer
 applyMaskV1 (Mask mask) = setBits . clearBits
   where
-    clearBits = (.&.) $ foldl' (\acc b -> acc <<| (if b == '0' then 0 else 1)) (0 :: Integer) mask
-    setBits = (.|.) $ foldl' (\acc b -> acc <<| (if b == '1' then 1 else 0)) (0 :: Integer) mask
+    clearBits = (.&.) . fromBits . map (/= '0') $ mask
+    setBits = (.|.) . fromBits . map (== '1') $ mask
 
 applyMaskV2 :: Mask -> Integer -> [Integer]
 applyMaskV2 (Mask mask) val = do
