@@ -4,7 +4,7 @@ module Advent2020.Day14
 
 import Numeric.Natural (Natural)
 import Data.List (foldl')
-import Data.Bits (Bits, (.|.), (.&.), shiftL, testBit)
+import Data.Bits ((.|.), (.&.), testBit)
 import Control.Monad (foldM_, forM_, foldM)
 import Control.Monad.ST (runST)
 import qualified Data.HashTable.ST.Cuckoo as Cuckoo
@@ -15,6 +15,7 @@ import Text.Parsec ((<|>), try)
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf, natural, word, integerWithOptionalLeadingSign)
+import Advent.BitUtils ((<<|))
 
 newtype Address = Address Natural deriving Show
 newtype Mask = Mask String deriving Show
@@ -26,9 +27,6 @@ inputParser = linesOf instruction
     instruction = try maskAssignment <|> writeToAddress
     maskAssignment = SetMask <$> (string "mask = " *> (Mask <$> word))
     writeToAddress = Write <$> (string "mem[" *> (Address <$> natural)) <*> (string "] = " *> integerWithOptionalLeadingSign)
-
-(<<|) :: Bits a => a -> a -> a
-(<<|) x y = shiftL x 1 .|. y
 
 -- | Applies a version 1 mask given a mask in its string form. A verison 1 mask
 -- is composed to two parts: a clearing mask and setting mask. The clearing
