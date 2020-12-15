@@ -19,6 +19,9 @@ import Advent.BitUtils (fromBits)
 newtype Address = Address Natural deriving Show
 newtype Mask = Mask String deriving Show
 data Instruction = SetMask Mask | Write Address Integer deriving Show
+data ProgramBehavior = ProgramBehavior { getValueTransformer :: Mask -> Integer -> Integer
+                                       , getAddressDecoder :: Mask -> Integer -> [Integer]
+                                       }
 
 inputParser :: Parser [Instruction]
 inputParser = linesOf instruction 
@@ -46,26 +49,26 @@ applyMaskV2 (Mask mask) val = do
   let bitPatterns = foldM f [] . zip (reverse mask) . map (testBit val) $ [0..]
   map fromBits bitPatterns
 
-executeInstruction :: (Mask -> Integer -> Integer) -> (Mask -> Integer -> [Integer]) -> Cuckoo.HashTable s Integer Integer -> Mask -> Instruction -> ST s Mask
-executeInstruction _ _ _ _ (SetMask mask) = pure mask
-executeInstruction modifyValue decodeAddress memory mask (Write (Address addrSeed) val) = do
-  let addresses = decodeAddress mask . toInteger $ addrSeed
+executeInstruction :: ProgramBehavior -> Cuckoo.HashTable s Integer Integer -> Mask -> Instruction -> ST s Mask
+executeInstruction _ _ _ (SetMask mask) = pure mask
+executeInstruction behavior memory mask (Write (Address addrSeed) val) = do
+  let addresses = getAddressDecoder behavior mask . toInteger $ addrSeed
   forM_ addresses $ \addr -> do
-    Cuckoo.insert memory addr . modifyValue mask $ val
+    Cuckoo.insert memory addr . getValueTransformer behavior mask $ val
   pure mask
 
 -- | Returns the sum of values in memory
-executeProgram :: [Instruction] -> (Mask -> Integer -> Integer) -> (Mask -> Integer -> [Integer]) -> Integer
-executeProgram program modifyValue decodeAddress = runST $ do
+executeProgram :: [Instruction] -> ProgramBehavior -> Integer
+executeProgram program behavior = runST $ do
   memory <- Cuckoo.new
-  foldM_ (executeInstruction modifyValue decodeAddress memory) (Mask "") program
+  foldM_ (executeInstruction behavior memory) (Mask "") program
   Cuckoo.foldM (\acc (_, v) -> pure $ acc + v) 0 memory
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show $ executeProgram program applyMaskV1 (const pure)
-    part2 = show $ executeProgram program (const id) applyMaskV2
+    part1 = show $ executeProgram program . ProgramBehavior applyMaskV1 $ const pure
+    part2 = show $ executeProgram program . ProgramBehavior (const id) $ applyMaskV2
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 14
