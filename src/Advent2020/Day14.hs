@@ -43,7 +43,7 @@ applyMaskV2 (Mask mask) val = do
       f acc ('0', v) = pure $ v : acc
       f acc ('1', _) = pure $ True : acc
       f acc ('X', _) = [False : acc, True : acc]
-  let bitPatterns = foldM f [] . reverse . zip mask . map (testBit val) $ [35,34..0]
+  let bitPatterns = foldM f [] . zip (reverse mask) . map (testBit val) $ [0..]
   map fromBits bitPatterns
 
 -- | Returns the sum of values in memory
