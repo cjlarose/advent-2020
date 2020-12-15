@@ -4,7 +4,7 @@ module Advent2020.Day14
 
 import Numeric.Natural (Natural)
 import Data.List (foldl')
-import Data.Bits ((.|.), (.&.), shiftL, testBit)
+import Data.Bits (Bits, (.|.), (.&.), shiftL, testBit)
 import Control.Monad (foldM_, forM_, foldM)
 import Control.Monad.ST (runST)
 import qualified Data.HashTable.ST.Cuckoo as Cuckoo
@@ -27,6 +27,9 @@ inputParser = linesOf instruction
     maskAssignment = SetMask <$> (string "mask = " *> (Mask <$> word))
     writeToAddress = Write <$> (string "mem[" *> (Address <$> natural)) <*> (string "] = " *> integerWithOptionalLeadingSign)
 
+(<<|) :: Bits a => a -> a -> a
+(<<|) x y = shiftL x 1 .|. y
+
 -- | Applies a version 1 mask given a mask in its string form. A verison 1 mask
 -- is composed to two parts: a clearing mask and setting mask. The clearing
 -- mask has a 0 in every bit position we want to clear, 1s elsewhere. The
@@ -34,15 +37,15 @@ inputParser = linesOf instruction
 applyMaskV1 :: Mask -> Integer -> Integer
 applyMaskV1 (Mask mask) = setBits . clearBits
   where
-    clearBits = (.&.) $ foldl' (\acc b -> shiftL acc 1 .|. (if b == '0' then 0 else 1)) (0 :: Integer) mask
-    setBits = (.|.) $ foldl' (\acc b -> shiftL acc 1 .|. (if b == '1' then 1 else 0)) (0 :: Integer) mask
+    clearBits = (.&.) $ foldl' (\acc b -> acc <<| (if b == '0' then 0 else 1)) (0 :: Integer) mask
+    setBits = (.|.) $ foldl' (\acc b -> acc <<| (if b == '1' then 1 else 0)) (0 :: Integer) mask
 
 applyMaskV2 :: Mask -> Integer -> [Integer]
 applyMaskV2 (Mask mask) val = do
   let f :: Integer -> (Char, Int) -> [Integer]
-      f acc ('0', v) = [shiftL acc 1 .|. fromIntegral v]
-      f acc ('1', _) = [shiftL acc 1 .|. 1]
-      f acc ('X', _) = [shiftL acc 1, shiftL acc 1 .|. 1]
+      f acc ('0', v) = [acc <<| fromIntegral v]
+      f acc ('1', _) = [acc <<| 1]
+      f acc ('X', _) = (<<|) acc <$> [0, 1]
   foldM f 0 . zip mask . map (fromEnum . testBit val) $ [35,34..0]
 
 -- | Returns the sum of values in memory
