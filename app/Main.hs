@@ -6,6 +6,7 @@ import System.Exit (exitFailure)
 
 import Advent2020.Solve (solverForProblem)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
+import qualified Advent2020.Day15Drew as Day15Drew
 
 main :: IO ()
 main = do
@@ -19,4 +20,4 @@ main = do
         Right (PuzzleAnswerPair (part1, part2)) -> do
           let output = part1 ++ "\n" ++ part2
           putStrLn output
-    _ -> hPutStrLn stderr "Usage: advent2020-exe problem-number"
+    _ -> Day15Drew.main
