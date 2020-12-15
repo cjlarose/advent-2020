@@ -40,9 +40,9 @@ applyMaskV1 (Mask mask) = setBits . clearBits
 applyMaskV2 :: Mask -> Integer -> [Integer]
 applyMaskV2 (Mask mask) val = do
   let f :: ([Bool] -> [Bool]) -> (Char, Bool) -> [[Bool] -> [Bool]]
-      f acc ('0', v) = pure $ (v :) . acc
-      f acc ('1', _) = pure $ (True :) . acc
-      f acc ('X', _) = [(False :) . acc, (True :) . acc]
+      f acc ('0', v) = pure $ acc . (v :)
+      f acc ('1', _) = pure $ acc . (True :)
+      f acc ('X', _) = [acc . (False :), acc . (True :)]
   let bitPatterns = foldM f id . zip mask . map (testBit val) $ [35,34..0]
   map (\f -> fromBits . f $ []) bitPatterns
 
