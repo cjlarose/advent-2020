@@ -2,8 +2,9 @@ module Advent2020.Day15
   ( solve
   ) where
 
-import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map, (!))
+import Control.Monad (forM_)
+import Control.Monad.ST (runST)
+import qualified Data.HashTable.ST.Cuckoo as Cuckoo
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine)
 import Text.Parsec (sepBy1, eof)
@@ -16,20 +17,23 @@ inputParser :: Parser [Int]
 inputParser = sepBy1 integerWithOptionalLeadingSign (char ',') <* endOfLine <* eof
 
 spokenAt :: Int -> [Int] -> Int
-spokenAt k inits = go (length inits) (last inits) mostRecentIndex
-  where
-    mostRecentIndex :: Map Int [Int]
-    mostRecentIndex = Map.fromList . zip inits . map pure $ [0..]
-
-    go :: Int -> Int -> Map Int [Int] -> Int
-    go i last acc
-      | i == k = last
-      | otherwise = go (i + 1) next newAcc
-          where
-            next = case acc ! last of
-                     (j:k:_) -> j - k
-                     _ -> 0
-            newAcc = Map.alter (Just . maybe [i] (\(x:_) -> [i, x])) next acc
+spokenAt k inits = runST $ do
+  indices <- Cuckoo.new
+  forM_ (zip [0..] inits) $ \(i, x) -> do
+    Cuckoo.insert indices x [i]
+  let go last i
+        | i == k = pure last
+        | otherwise = do
+            prevs <- Cuckoo.lookup indices last
+            let next = case prevs of
+                         Just (j:k:_) -> j - k
+                         _ -> 0
+            current <- Cuckoo.lookup indices next
+            case current of
+              Just (x:_) -> Cuckoo.insert indices next [i, x]
+              _ -> Cuckoo.insert indices next [i]
+            go next (i + 1)
+  go (last inits) (length inits)
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults starting = PuzzleAnswerPair (part1, part2)
