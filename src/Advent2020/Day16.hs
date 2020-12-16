@@ -1,5 +1,3 @@
-{-# LANGUAGE BangPatterns #-}
-
 module Advent2020.Day16
   ( solve
   ) where
@@ -10,6 +8,7 @@ import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.Ord (comparing)
 import Control.Monad (guard)
+import Control.Monad.Loops (iterateUntilM)
 import Data.Foldable (minimumBy)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine, satisfy, string)
@@ -68,7 +67,7 @@ ticketCode (Ticket values) = product . map fst . filter (fieldHasDeparture . snd
     fieldHasDeparture _ = False
 
 getFieldOrder :: [Rule] -> [Ticket] -> [String]
-getFieldOrder rules tickets = possibleFieldOrder (Set.fromList [0..numCols - 1]) allFields Map.empty
+getFieldOrder rules tickets = possibleFieldOrder
   where
     numCols = length . head . map (\(Ticket t) -> t) $ tickets
     allFields = Set.fromList rules
@@ -79,21 +78,24 @@ getFieldOrder rules tickets = possibleFieldOrder (Set.fromList [0..numCols - 1])
       pure rule
     possibleFields :: Map Int (Set Rule)
     possibleFields = Map.fromList . map (\pos -> (pos, Set.fromList $ possibleFieldsForColumn pos allFields)) $ [0..numCols - 1]
-    possibleFieldOrder :: Set Int -> Set Rule -> Map Int String -> [String]
-    possibleFieldOrder remainingPositions remainingFields (!positionToFieldMap)
-      | Set.size remainingPositions == 0 = map snd . Map.toAscList $ positionToFieldMap
-      | otherwise = do
+    possibleFieldOrders :: [[String]]
+    possibleFieldOrders = orders
+      where
+        toOrder = map snd . Map.toAscList
+        orders = map (\(_, _, m) -> toOrder m) . iterateUntilM (\(pos, _, _) -> Set.size pos == 0) f $ (Set.fromList [0..numCols - 1], allFields, Map.empty)
+        f (remainingPositions, remainingFields, positionToFieldMap) = do
           let candidates :: Map Int Int
               candidates = Map.map (\v -> Set.size $ Set.intersection v remainingFields) . Map.restrictKeys possibleFields $ remainingPositions
           guard $ Map.size candidates > 0
           let posWithMinPossibleRemainingFields :: Int
               posWithMinPossibleRemainingFields = fst . minimumBy (comparing snd) . Map.toList $ candidates
           let candidateFieldsForPosition = Set.intersection remainingFields $ possibleFields ! posWithMinPossibleRemainingFields
-          rule <- Set.toList candidateFieldsForPosition
-          let fieldName = getFieldName rule
-          possibleFieldOrder (Set.delete posWithMinPossibleRemainingFields remainingPositions)
-            (Set.delete rule remainingFields)
-            (Map.insert posWithMinPossibleRemainingFields fieldName positionToFieldMap)
+          let g rule = ( Set.delete posWithMinPossibleRemainingFields remainingPositions
+                       , Set.delete rule remainingFields
+                       , Map.insert posWithMinPossibleRemainingFields (getFieldName rule) positionToFieldMap
+                       )
+          map g . Set.toList $ candidateFieldsForPosition
+    [possibleFieldOrder] = possibleFieldOrders
 
 myTicketCode :: ProblemInput -> Int
 myTicketCode input = code
