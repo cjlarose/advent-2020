@@ -3,7 +3,7 @@ module Advent2020.Day15
   ) where
 
 import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map, (!))
+import Data.Map.Strict (Map)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine)
 import Text.Parsec (sepBy1, eof)
@@ -18,18 +18,18 @@ inputParser = sepBy1 integerWithOptionalLeadingSign (char ',') <* endOfLine <* e
 spokenAt :: Int -> [Int] -> Int
 spokenAt k inits = go (length inits) (last inits) mostRecentIndex
   where
-    mostRecentIndex :: Map Int [Int]
-    mostRecentIndex = Map.fromList . zip inits . map pure $ [0..]
+    mostRecentIndex :: Map Int Int
+    mostRecentIndex = Map.fromList . zip (init inits) $ [0..]
 
-    go :: Int -> Int -> Map Int [Int] -> Int
+    go :: Int -> Int -> Map Int Int -> Int
     go i last acc
       | i == k = last
       | otherwise = go (i + 1) next newAcc
           where
-            next = case acc ! last of
-                     (j:k:_) -> j - k
+            next = case Map.lookup last acc of
+                     Just j -> i - j - 1
                      _ -> 0
-            newAcc = Map.alter (Just . maybe [i] (\(x:_) -> [i, x])) next acc
+            newAcc = Map.insert last (i - 1) acc
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults starting = PuzzleAnswerPair (part1, part2)
