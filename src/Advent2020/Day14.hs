@@ -78,8 +78,8 @@ executeProgram :: [Instruction] -> ProgramBehavior -> Integer
 executeProgram program behavior = memorySum
   where
     initialState = MachineState Map.empty $ Mask ""
-    executeInstructions = mapM_ executeInstruction program
-    (memorySum, _) = runReader (runStateT (executeInstructions >> sumOfMemoryValues) initialState) behavior
+    executeAndSum = mapM_ executeInstruction program >> sumOfMemoryValues
+    (memorySum, _) = runReader (runStateT executeAndSum initialState) behavior
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
