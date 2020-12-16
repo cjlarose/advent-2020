@@ -54,7 +54,7 @@ ticketScanningErrorRate input = sum $ do
 isValidTicket :: [Rule] -> Ticket -> Bool
 isValidTicket rules (Ticket ticket) = all validForSomeRule ticket
   where
-    validForSomeRule value = any (\r -> valueInRangeForRule r value) rules
+    validForSomeRule value = any (`valueInRangeForRule` value) rules
 
 valueInRangeForRule :: Rule -> Int -> Bool
 valueInRangeForRule Rule{getValidRanges=xs} x = any inRange xs
