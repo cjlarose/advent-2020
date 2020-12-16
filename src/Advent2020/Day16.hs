@@ -82,15 +82,16 @@ getFieldOrder rules tickets = head possibleFieldOrders
     possibleFieldOrders = orders
       where
         toOrder = map snd . Map.toAscList
-        orders = map (\(_, _, m) -> toOrder m) . iterateUntilM (\(pos, _, _) -> Set.size pos == 0) f $ (Set.fromList [0..numCols - 1], allFields, Map.empty)
-        f (remainingPositions, remainingFields, positionToFieldMap) = map g . Set.toList $ candidateFieldsForPosition
+        orders = map (\(_, _, m, _) -> toOrder m) . iterateUntilM (\(pos, _, _, _) -> Set.size pos == 0) f $ (Set.fromList [0..numCols - 1], allFields, Map.empty, possibleFields)
+        f (remainingPositions, remainingFields, positionToFieldMap, candidates) = map g . Set.toList $ candidateFieldsForPosition
           where
-            candidates = Map.map (`Set.intersection` remainingFields) . Map.restrictKeys possibleFields $ remainingPositions
             (posWithMinPossibleRemainingFields, candidateFieldsForPosition) = minimumBy (comparing (Set.size . snd)) . Map.toList $ candidates
-            g rule = ( Set.delete posWithMinPossibleRemainingFields remainingPositions
-                     , Set.delete rule remainingFields
-                     , Map.insert posWithMinPossibleRemainingFields (getFieldName rule) positionToFieldMap
-                     )
+            g rule = (newRemainingPositions, newRemainingFields, newPositionToFieldMap, newCandidates)
+              where
+                newRemainingPositions = Set.delete posWithMinPossibleRemainingFields remainingPositions
+                newRemainingFields = Set.delete rule remainingFields
+                newPositionToFieldMap = Map.insert posWithMinPossibleRemainingFields (getFieldName rule) positionToFieldMap
+                newCandidates = Map.map (Set.delete rule) . Map.restrictKeys candidates $ newRemainingPositions
 
 myTicketCode :: ProblemInput -> Int
 myTicketCode input = code
