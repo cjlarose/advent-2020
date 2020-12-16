@@ -26,10 +26,10 @@ spokenAt k inits = go (length inits) (last inits) mostRecentIndex
       | i == k = last
       | otherwise = go (i + 1) next newAcc
           where
-            next = case Map.lookup last acc of
+            (oldVal, newAcc) = Map.insertLookupWithKey (\_ v _ -> v) last (i - 1) acc
+            next = case oldVal of
                      Just j -> i - j - 1
                      _ -> 0
-            newAcc = Map.insert last (i - 1) acc
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults starting = PuzzleAnswerPair (part1, part2)
