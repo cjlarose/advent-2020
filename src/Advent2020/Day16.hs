@@ -95,11 +95,13 @@ getFieldOrder rules tickets = head possibleFieldOrders
           pure (newRemainingPositions, newRemainingFields, newPositionToFieldMap, newCandidates)
 
 myTicketCode :: ProblemInput -> Int
-myTicketCode input = code
+myTicketCode ProblemInput{getRules=rules
+                         ,getMyTicket=myTicket
+                         ,getNearbyTickets=nearbyTickets} = code
   where
-    validTickets = filter (isValidTicket (getRules input)) $ getNearbyTickets input
-    fieldOrder = getFieldOrder (getRules input) validTickets
-    code = ticketCode (getMyTicket input) fieldOrder
+    validTickets = filter (isValidTicket rules) nearbyTickets
+    fieldOrder = getFieldOrder rules validTickets
+    code = ticketCode myTicket fieldOrder
 
 printResults :: ProblemInput -> PuzzleAnswerPair
 printResults input = PuzzleAnswerPair (part1, part2)
