@@ -76,18 +76,17 @@ getFieldOrder rules tickets = head possibleFieldOrders
     possibleFieldOrders = orders
       where
         toOrder = map snd . Map.toAscList
-        initialValues = (Set.fromList [0..numCols - 1], allFields, Map.empty, possibleFields)
-        searchComplete (pos, _, _, _) = Set.size pos == 0
-        orders = map (\(_, _, m, _) -> toOrder m) . iterateUntilM searchComplete f $ initialValues
+        initialValues = (allFields, Map.empty, possibleFields)
+        searchComplete (fields, _, _) = Set.size fields == 0
+        orders = map (\(_, m, _) -> toOrder m) . iterateUntilM searchComplete f $ initialValues
         idealCandidate = minimumBy (comparing (Set.size . snd)) . Map.toList
-        f (remainingPositions, remainingFields, positionToFieldMap, candidates) = do
+        f (remainingFields, positionToFieldMap, candidates) = do
           let (pos, candidateFieldsForPosition) = idealCandidate candidates
           rule <- Set.toList candidateFieldsForPosition
-          let newRemainingPositions = Set.delete pos remainingPositions
           let newRemainingFields = Set.delete rule remainingFields
           let newPositionToFieldMap = Map.insert pos (getFieldName rule) positionToFieldMap
-          let newCandidates = Map.map (Set.delete rule) . Map.restrictKeys candidates $ newRemainingPositions
-          pure (newRemainingPositions, newRemainingFields, newPositionToFieldMap, newCandidates)
+          let newCandidates = Map.map (Set.delete rule) . Map.delete pos $ candidates
+          pure (newRemainingFields, newPositionToFieldMap, newCandidates)
 
 myTicketCode :: ProblemInput -> Int
 myTicketCode ProblemInput{getRules=rules
