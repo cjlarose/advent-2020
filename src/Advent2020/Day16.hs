@@ -28,7 +28,7 @@ data ProblemInput = ProblemInput { getRules :: [Rule]
                                  } deriving Show
 
 inputParser :: Parser ProblemInput
-inputParser = ProblemInput <$> (rules <* endOfLine) <*> (myTicket <* endOfLine) <*> nearbyTickets <* eof
+inputParser = ProblemInput <$> rules <* endOfLine <*> myTicket <* endOfLine <*> nearbyTickets <* eof
   where
     rules = sepEndBy1 rule endOfLine
     rule = Rule <$> many1 (satisfy (\c -> c /= ':' && c /= '\n')) <* string ": " <*> sepBy1 range (string " or ")
