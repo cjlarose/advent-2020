@@ -27,6 +27,9 @@ data ProgramBehavior = ProgramBehavior { getValueTransformer :: Mask -> Integer 
                                        , getAddressDecoder :: Mask -> Integer -> [Integer]
                                        }
 type ProgramConfig = MonadReader ProgramBehavior
+data MachineState = MachineState { getMemory :: Map Integer Integer
+                                 , getMask :: Mask
+                                 }
 
 inputParser :: Parser [Instruction]
 inputParser = linesOf instruction 
@@ -54,24 +57,23 @@ applyMaskV2 (Mask mask) val = do
   let bitPatterns = foldM f [] . zip (reverse mask) . map (testBit val) $ [0..]
   map fromBits bitPatterns
 
-executeInstruction :: ProgramConfig m => Map Integer Integer -> Mask -> Instruction -> m (Map Integer Integer, Mask)
-executeInstruction memory _ (SetMask mask) = pure (memory, mask)
-executeInstruction memory mask (Write (Address addrSeed) val) = do
+executeInstruction :: ProgramConfig m => MachineState -> Instruction -> m MachineState
+executeInstruction state (SetMask mask) = pure state{getMask=mask}
+executeInstruction state@MachineState{getMemory=memory,getMask=mask} (Write (Address addrSeed) val) = do
   transformValue <- asks getValueTransformer
   decodeAddress <- asks getAddressDecoder
   let memoryValue = transformValue mask val
   let addresses = decodeAddress mask . toInteger $ addrSeed
   let newMemory = foldr (`Map.insert` memoryValue) memory addresses
-  pure (newMemory, mask)
+  pure state{getMemory=newMemory}
 
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> ProgramBehavior -> Integer
 executeProgram program behavior = Map.foldr (+) 0 memory
   where
-    actionInContext = foldM (\(memory, mask) instruction -> executeInstruction memory mask instruction)
-                        (Map.empty, Mask "")
-                        program
-    (memory, _) = runReader actionInContext behavior
+    initialState = MachineState Map.empty $ Mask ""
+    actionInContext = foldM executeInstruction initialState program
+    MachineState{getMemory=memory} = runReader actionInContext behavior
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
