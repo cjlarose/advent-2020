@@ -2,8 +2,8 @@ module Advent2020.Day15
   ( solve
   ) where
 
-import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map)
+import qualified Data.IntMap.Strict as IntMap
+import Data.IntMap.Strict (IntMap)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine)
 import Text.Parsec (sepBy1, eof)
@@ -18,15 +18,15 @@ inputParser = sepBy1 integerWithOptionalLeadingSign (char ',') <* endOfLine <* e
 spokenAt :: Int -> [Int] -> Int
 spokenAt k inits = go (length inits) (last inits) mostRecentIndex
   where
-    mostRecentIndex :: Map Int Int
-    mostRecentIndex = Map.fromList . zip (init inits) $ [0..]
+    mostRecentIndex :: IntMap Int
+    mostRecentIndex = IntMap.fromList . zip (init inits) $ [0..]
 
-    go :: Int -> Int -> Map Int Int -> Int
+    go :: Int -> Int -> IntMap Int -> Int
     go i last acc
       | i == k = last
       | otherwise = go (i + 1) next newAcc
           where
-            (oldVal, newAcc) = Map.insertLookupWithKey (\_ v _ -> v) last (i - 1) acc
+            (oldVal, newAcc) = IntMap.insertLookupWithKey (\_ v _ -> v) last (i - 1) acc
             next = maybe 0 (\j -> i - j - 1) oldVal
 
 printResults :: [Int] -> PuzzleAnswerPair
