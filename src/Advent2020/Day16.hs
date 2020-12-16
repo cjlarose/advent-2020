@@ -84,8 +84,7 @@ getFieldOrder rules tickets = head possibleFieldOrders
         toOrder = map snd . Map.toAscList
         orders = map (\(_, _, m) -> toOrder m) . iterateUntilM (\(pos, _, _) -> Set.size pos == 0) f $ (Set.fromList [0..numCols - 1], allFields, Map.empty)
         f (remainingPositions, remainingFields, positionToFieldMap) = do
-          let candidates :: Map Int (Set Rule)
-              candidates = Map.map (`Set.intersection` remainingFields) . Map.restrictKeys possibleFields $ remainingPositions
+          let candidates = Map.map (`Set.intersection` remainingFields) . Map.restrictKeys possibleFields $ remainingPositions
           let (posWithMinPossibleRemainingFields, candidateFieldsForPosition) = minimumBy (comparing (Set.size . snd)) . Map.toList $ candidates
           let g rule = ( Set.delete posWithMinPossibleRemainingFields remainingPositions
                        , Set.delete rule remainingFields
