@@ -97,7 +97,8 @@ getFieldOrder rules tickets = head possibleFieldOrders
 myTicketCode :: ProblemInput -> Int
 myTicketCode input = code
   where
-    fieldOrder = getFieldOrder (getRules input) (filter (isValidTicket (getRules input)) $ getNearbyTickets input)
+    validTickets = filter (isValidTicket (getRules input)) $ getNearbyTickets input
+    fieldOrder = getFieldOrder (getRules input) validTickets
     code = ticketCode (getMyTicket input) fieldOrder
 
 printResults :: ProblemInput -> PuzzleAnswerPair
