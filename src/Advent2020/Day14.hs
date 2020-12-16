@@ -67,13 +67,16 @@ executeInstruction state@MachineState{getMemory=memory,getMask=mask} (Write (Add
   let newMemory = foldr (`Map.insert` memoryValue) memory addresses
   pure state{getMemory=newMemory}
 
+sumOfMemoryValues :: MachineState -> Integer
+sumOfMemoryValues MachineState{getMemory=memory} = Map.foldr (+) 0 memory
+
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> ProgramBehavior -> Integer
-executeProgram program behavior = Map.foldr (+) 0 memory
+executeProgram program behavior = sumOfMemoryValues finalState
   where
     initialState = MachineState Map.empty $ Mask ""
     actionInContext = foldM executeInstruction initialState program
-    MachineState{getMemory=memory} = runReader actionInContext behavior
+    finalState = runReader actionInContext behavior
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
