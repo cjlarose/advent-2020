@@ -1,5 +1,6 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Advent2020.Day14
   ( solve
@@ -10,8 +11,8 @@ import Data.Map.Strict (Map)
 import Numeric.Natural (Natural)
 import Data.Bits ((.|.), (.&.), testBit)
 import Control.Monad (foldM)
-import Control.Monad.Reader (MonadReader, runReader, asks)
-import Control.Monad.State.Strict (StateT, gets, modify, runStateT)
+import Control.Monad.Reader (MonadReader, Reader, runReader, asks)
+import Control.Monad.State.Strict (MonadState, StateT, gets, modify, runStateT)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string)
 import Text.Parsec ((<|>), try)
@@ -31,6 +32,10 @@ type ProgramConfig = MonadReader ProgramBehavior
 data MachineState = MachineState { getMemory :: Map Integer Integer
                                  , getMask :: Mask
                                  }
+
+newtype VM a = VM {
+  runVM :: StateT MachineState (Reader ProgramBehavior) a
+} deriving (Monad, Applicative, Functor, MonadState MachineState, ProgramConfig)
 
 inputParser :: Parser [Instruction]
 inputParser = linesOf instruction 
@@ -58,7 +63,7 @@ applyMaskV2 (Mask mask) val = do
   let bitPatterns = foldM f [] . zip (reverse mask) . map (testBit val) $ [0..]
   map fromBits bitPatterns
 
-executeInstruction :: ProgramConfig m => Instruction -> StateT MachineState m ()
+executeInstruction :: Instruction -> VM ()
 executeInstruction (SetMask mask) = modify (\state -> state{getMask=mask})
 executeInstruction (Write (Address addrSeed) val) = do
   transformValue <- asks getValueTransformer
@@ -70,7 +75,7 @@ executeInstruction (Write (Address addrSeed) val) = do
   let newMemory = foldr (`Map.insert` memoryValue) memory addresses
   modify (\state -> state{getMemory=newMemory})
 
-sumOfMemoryValues :: Monad m => StateT MachineState m Integer
+sumOfMemoryValues :: VM Integer
 sumOfMemoryValues = Map.foldr (+) 0 <$> gets getMemory
 
 -- | Returns the sum of values in memory
@@ -79,7 +84,7 @@ executeProgram program behavior = memorySum
   where
     initialState = MachineState Map.empty $ Mask ""
     executeAndSum = mapM_ executeInstruction program >> sumOfMemoryValues
-    (memorySum, _) = runReader (runStateT executeAndSum initialState) behavior
+    (memorySum, _) = runReader (runStateT (runVM executeAndSum) initialState) behavior
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
