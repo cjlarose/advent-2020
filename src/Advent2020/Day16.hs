@@ -39,10 +39,7 @@ inputParser = ProblemInput <$> (rules <* endOfLine) <*> (myTicket <* endOfLine <
     nearbyTickets = string "nearby tickets:" *> endOfLine *> sepEndBy1 ticket endOfLine
 
 inAnyRuleRange :: [Rule] -> Int -> Bool
-inAnyRuleRange rules x = any inRuleRange rules
-  where
-    inRuleRange Rule{getValidRanges=xs} = any inRange xs
-    inRange (lo, hi) = x >= lo && x <= hi
+inAnyRuleRange rules x = any (`valueInRangeForRule` x) rules
 
 ticketScanningErrorRate :: ProblemInput -> Int
 ticketScanningErrorRate input = sum $ do
@@ -52,9 +49,7 @@ ticketScanningErrorRate input = sum $ do
   pure fieldValue
 
 isValidTicket :: [Rule] -> Ticket -> Bool
-isValidTicket rules (Ticket ticket) = all validForSomeRule ticket
-  where
-    validForSomeRule value = any (`valueInRangeForRule` value) rules
+isValidTicket rules (Ticket ticket) = all (inAnyRuleRange rules) ticket
 
 valueInRangeForRule :: Rule -> Int -> Bool
 valueInRangeForRule Rule{getValidRanges=xs} x = any inRange xs
