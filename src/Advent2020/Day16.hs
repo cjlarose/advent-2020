@@ -67,7 +67,7 @@ ticketCode (Ticket values) = product . map fst . filter (fieldHasDeparture . snd
     fieldHasDeparture _ = False
 
 getFieldOrder :: [Rule] -> [Ticket] -> [String]
-getFieldOrder rules tickets = possibleFieldOrder
+getFieldOrder rules tickets = head possibleFieldOrders
   where
     numCols = length . head . map (\(Ticket t) -> t) $ tickets
     allFields = Set.fromList rules
@@ -95,7 +95,6 @@ getFieldOrder rules tickets = possibleFieldOrder
                        , Map.insert posWithMinPossibleRemainingFields (getFieldName rule) positionToFieldMap
                        )
           map g . Set.toList $ candidateFieldsForPosition
-    [possibleFieldOrder] = possibleFieldOrders
 
 myTicketCode :: ProblemInput -> Int
 myTicketCode input = code
