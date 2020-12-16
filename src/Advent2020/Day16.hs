@@ -3,7 +3,7 @@ module Advent2020.Day16
   ) where
 
 import qualified Data.Map.Strict as Map
-import Data.Map.Strict (Map, (!))
+import Data.Map.Strict (Map)
 import qualified Data.Set as Set
 import Data.Set (Set)
 import Data.Ord (comparing)
