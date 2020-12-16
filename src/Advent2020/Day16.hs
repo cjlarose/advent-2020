@@ -59,13 +59,7 @@ valueInRangeForRule Rule{getValidRanges=xs} x = any inRange xs
 ticketCode :: Ticket -> [String] -> Int
 ticketCode (Ticket values) = product . map fst . filter (fieldHasDeparture . snd) . zip values
   where
-    fieldHasDeparture "departure location" = True
-    fieldHasDeparture "departure station" = True
-    fieldHasDeparture "departure platform" = True
-    fieldHasDeparture "departure track" = True
-    fieldHasDeparture "departure date" = True
-    fieldHasDeparture "departure time" = True
-    fieldHasDeparture _ = False
+    fieldHasDeparture name = elem "departure" . words $ name
 
 getFieldOrder :: [Rule] -> [Ticket] -> [String]
 getFieldOrder rules tickets = head possibleFieldOrders
