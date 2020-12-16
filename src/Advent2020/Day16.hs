@@ -31,7 +31,8 @@ inputParser :: Parser ProblemInput
 inputParser = ProblemInput <$> rules <* endOfLine <*> myTicket <* endOfLine <*> nearbyTickets <* eof
   where
     rules = sepEndBy1 rule endOfLine
-    rule = Rule <$> many1 (satisfy (\c -> c /= ':' && c /= '\n')) <* string ": " <*> sepBy1 range (string " or ")
+    fieldName = many1 (satisfy (\c -> c /= ':' && c /= '\n'))
+    rule = Rule <$> fieldName <* string ": " <*> sepBy1 range (string " or ")
     range = (,) <$> integerWithOptionalLeadingSign <* char '-' <*> integerWithOptionalLeadingSign
     myTicket = string "your ticket:" *> endOfLine *> ticket <* endOfLine
     ticket = Ticket <$> sepBy1 integerWithOptionalLeadingSign (char ',')
