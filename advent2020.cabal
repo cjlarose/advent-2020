@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1734ad965494c23a64009488568070703aeaf1cc430720919fcd7c031bcc5b6c
+-- hash: fb8f10534f0fd14dbf83563f850774ef98a93980366975ebc017967f8ae5fc44
 
 name:           advent2020
 version:        0.1.0.0
@@ -61,6 +61,7 @@ library
     , filepath
     , hashtables
     , monad-loops
+    , mtl
     , parsec
     , tasty
     , tasty-golden
@@ -83,6 +84,7 @@ executable advent2020-exe
     , filepath
     , hashtables
     , monad-loops
+    , mtl
     , parsec
     , tasty
     , tasty-golden
@@ -106,6 +108,7 @@ test-suite advent2020-test
     , filepath
     , hashtables
     , monad-loops
+    , mtl
     , parsec
     , tasty
     , tasty-golden

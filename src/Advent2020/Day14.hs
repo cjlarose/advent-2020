@@ -1,3 +1,6 @@
+{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE FlexibleContexts #-}
+
 module Advent2020.Day14
   ( solve
   ) where
@@ -7,7 +10,7 @@ import Data.Map.Strict (Map)
 import Numeric.Natural (Natural)
 import Data.Bits ((.|.), (.&.), testBit)
 import Control.Monad (foldM)
-import Data.Foldable (foldl')
+import Control.Monad.Reader (MonadReader, runReader, asks)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string)
 import Text.Parsec ((<|>), try)
@@ -23,6 +26,7 @@ data Instruction = SetMask Mask | Write Address Integer deriving Show
 data ProgramBehavior = ProgramBehavior { getValueTransformer :: Mask -> Integer -> Integer
                                        , getAddressDecoder :: Mask -> Integer -> [Integer]
                                        }
+type ProgramConfig = MonadReader ProgramBehavior
 
 inputParser :: Parser [Instruction]
 inputParser = linesOf instruction 
@@ -50,21 +54,24 @@ applyMaskV2 (Mask mask) val = do
   let bitPatterns = foldM f [] . zip (reverse mask) . map (testBit val) $ [0..]
   map fromBits bitPatterns
 
-executeInstruction :: ProgramBehavior -> Map Integer Integer -> Mask -> Instruction -> (Map Integer Integer, Mask)
-executeInstruction _ memory _ (SetMask mask) = (memory, mask)
-executeInstruction behavior memory mask (Write (Address addrSeed) val) = (newMemory, mask)
-  where
-    memoryValue = getValueTransformer behavior mask val
-    addresses = getAddressDecoder behavior mask . toInteger $ addrSeed
-    newMemory = foldr (`Map.insert` memoryValue) memory addresses
+executeInstruction :: ProgramConfig m => Map Integer Integer -> Mask -> Instruction -> m (Map Integer Integer, Mask)
+executeInstruction memory _ (SetMask mask) = pure (memory, mask)
+executeInstruction memory mask (Write (Address addrSeed) val) = do
+  transformValue <- asks getValueTransformer
+  decodeAddress <- asks getAddressDecoder
+  let memoryValue = transformValue mask val
+  let addresses = decodeAddress mask . toInteger $ addrSeed
+  let newMemory = foldr (`Map.insert` memoryValue) memory addresses
+  pure (newMemory, mask)
 
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> ProgramBehavior -> Integer
 executeProgram program behavior = Map.foldr (+) 0 memory
   where
-    (memory, _) = foldl' (\(memory, mask) instruction -> executeInstruction behavior memory mask instruction)
-                    (Map.empty, Mask "")
-                    program
+    actionInContext = foldM (\(memory, mask) instruction -> executeInstruction memory mask instruction)
+                        (Map.empty, Mask "")
+                        program
+    (memory, _) = runReader actionInContext behavior
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)

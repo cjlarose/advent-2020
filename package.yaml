@@ -28,6 +28,7 @@ dependencies:
 - filepath
 - hashtables
 - monad-loops
+- mtl
 - parsec
 - tasty
 - tasty-golden
