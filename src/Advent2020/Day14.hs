@@ -11,6 +11,7 @@ import Numeric.Natural (Natural)
 import Data.Bits ((.|.), (.&.), testBit)
 import Control.Monad (foldM)
 import Control.Monad.Reader (MonadReader, runReader, asks)
+import Control.Monad.State.Strict (StateT, gets, modify, runStateT)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (string)
 import Text.Parsec ((<|>), try)
@@ -57,26 +58,28 @@ applyMaskV2 (Mask mask) val = do
   let bitPatterns = foldM f [] . zip (reverse mask) . map (testBit val) $ [0..]
   map fromBits bitPatterns
 
-executeInstruction :: ProgramConfig m => MachineState -> Instruction -> m MachineState
-executeInstruction state (SetMask mask) = pure state{getMask=mask}
-executeInstruction state@MachineState{getMemory=memory,getMask=mask} (Write (Address addrSeed) val) = do
+executeInstruction :: ProgramConfig m => Instruction -> StateT MachineState m ()
+executeInstruction (SetMask mask) = modify (\state -> state{getMask=mask})
+executeInstruction (Write (Address addrSeed) val) = do
   transformValue <- asks getValueTransformer
   decodeAddress <- asks getAddressDecoder
+  mask <- gets getMask
   let memoryValue = transformValue mask val
   let addresses = decodeAddress mask . toInteger $ addrSeed
+  memory <- gets getMemory
   let newMemory = foldr (`Map.insert` memoryValue) memory addresses
-  pure state{getMemory=newMemory}
+  modify (\state -> state{getMemory=newMemory})
 
-sumOfMemoryValues :: MachineState -> Integer
-sumOfMemoryValues MachineState{getMemory=memory} = Map.foldr (+) 0 memory
+sumOfMemoryValues :: ProgramConfig m => StateT MachineState m Integer
+sumOfMemoryValues = Map.foldr (+) 0 <$> gets getMemory
 
 -- | Returns the sum of values in memory
 executeProgram :: [Instruction] -> ProgramBehavior -> Integer
-executeProgram program behavior = sumOfMemoryValues finalState
+executeProgram program behavior = memorySum
   where
     initialState = MachineState Map.empty $ Mask ""
-    actionInContext = foldM executeInstruction initialState program
-    finalState = runReader actionInContext behavior
+    actionInContext = mapM_ executeInstruction program
+    (memorySum, _) = runReader (runStateT (actionInContext >> sumOfMemoryValues) initialState) behavior
 
 printResults :: [Instruction] -> PuzzleAnswerPair
 printResults program = PuzzleAnswerPair (part1, part2)
