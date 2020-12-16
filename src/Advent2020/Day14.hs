@@ -70,7 +70,7 @@ executeInstruction (Write (Address addrSeed) val) = do
   let newMemory = foldr (`Map.insert` memoryValue) memory addresses
   modify (\state -> state{getMemory=newMemory})
 
-sumOfMemoryValues :: ProgramConfig m => StateT MachineState m Integer
+sumOfMemoryValues :: Monad m => StateT MachineState m Integer
 sumOfMemoryValues = Map.foldr (+) 0 <$> gets getMemory
 
 -- | Returns the sum of values in memory
