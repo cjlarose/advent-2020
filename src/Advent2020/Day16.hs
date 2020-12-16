@@ -1,8 +1,16 @@
+{-# LANGUAGE BangPatterns #-}
+
 module Advent2020.Day16
   ( solve
   ) where
 
+import qualified Data.Map.Strict as Map
+import Data.Map.Strict (Map, (!))
+import qualified Data.Set as Set
+import Data.Set (Set)
+import Data.Ord (comparing)
 import Control.Monad (guard)
+import Data.Foldable (minimumBy)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine, satisfy, string)
 import Text.Parsec (sepBy1, sepEndBy1, eof, many1)
@@ -13,7 +21,7 @@ import Advent.CommonParsers (integerWithOptionalLeadingSign)
 
 data Rule = Rule { getFieldName :: String
                  , getValidRanges :: [(Int, Int)]
-                 } deriving Show
+                 } deriving (Show, Ord, Eq)
 newtype Ticket = Ticket [Int] deriving Show
 data ProblemInput = ProblemInput { getRules :: [Rule]
                                  , getMyTicket :: Ticket
@@ -43,11 +51,66 @@ ticketScanningErrorRate input = sum $ do
   guard . not . inAnyRuleRange (getRules input) $ fieldValue 
   pure fieldValue
 
+isValidTicket :: [Rule] -> Ticket -> Bool
+isValidTicket rules (Ticket ticket) = all validForSomeRule ticket
+  where
+    validForSomeRule value = any (\r -> valueInRangeForRule r value) rules
+
+valueInRangeForRule :: Rule -> Int -> Bool
+valueInRangeForRule Rule{getValidRanges=xs} x = any inRange xs
+  where
+    inRange (lo, hi) = x >= lo && x <= hi
+
+ticketCode :: Ticket -> [String] -> Int
+ticketCode (Ticket values) = product . map fst . filter (fieldHasDeparture . snd) . zip values
+  where
+    fieldHasDeparture "departure location" = True
+    fieldHasDeparture "departure station" = True
+    fieldHasDeparture "departure platform" = True
+    fieldHasDeparture "departure track" = True
+    fieldHasDeparture "departure date" = True
+    fieldHasDeparture "departure time" = True
+    fieldHasDeparture _ = False
+
+getFieldOrder :: [Rule] -> [Ticket] -> [String]
+getFieldOrder rules tickets = possibleFieldOrder (Set.fromList [0..numCols - 1]) allFields Map.empty
+  where
+    numCols = length . head . map (\(Ticket t) -> t) $ tickets
+    allFields = Set.fromList rules
+    possibleFieldsForColumn pos remaining = do
+      rule <- Set.toList remaining
+      let ticketValues = map (\(Ticket t) -> t !! pos) tickets
+      guard . all (valueInRangeForRule rule) $ ticketValues
+      pure rule
+    possibleFields :: Map Int (Set Rule)
+    possibleFields = Map.fromList . map (\pos -> (pos, Set.fromList $ possibleFieldsForColumn pos allFields)) $ [0..numCols - 1]
+    possibleFieldOrder :: Set Int -> Set Rule -> Map Int String -> [String]
+    possibleFieldOrder remainingPositions remainingFields (!positionToFieldMap)
+      | Set.size remainingPositions == 0 = map snd . Map.toAscList $ positionToFieldMap
+      | otherwise = do
+          let candidates :: Map Int Int
+              candidates = Map.map (\v -> Set.size $ Set.intersection v remainingFields) . Map.restrictKeys possibleFields $ remainingPositions
+          guard $ Map.size candidates > 0
+          let posWithMinPossibleRemainingFields :: Int
+              posWithMinPossibleRemainingFields = fst . minimumBy (comparing snd) . Map.toList $ candidates
+          let candidateFieldsForPosition = Set.intersection remainingFields $ possibleFields ! posWithMinPossibleRemainingFields
+          rule <- Set.toList candidateFieldsForPosition
+          let fieldName = getFieldName rule
+          possibleFieldOrder (Set.delete posWithMinPossibleRemainingFields remainingPositions)
+            (Set.delete rule remainingFields)
+            (Map.insert posWithMinPossibleRemainingFields fieldName positionToFieldMap)
+
+myTicketCode :: ProblemInput -> Int
+myTicketCode input = code
+  where
+    fieldOrder = getFieldOrder (getRules input) (filter (isValidTicket (getRules input)) $ getNearbyTickets input)
+    code = ticketCode (getMyTicket input) fieldOrder
+
 printResults :: ProblemInput -> PuzzleAnswerPair
 printResults input = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . ticketScanningErrorRate $ input
-    part2 = "not implemented"
+    part2 = show . myTicketCode $ input
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 16
