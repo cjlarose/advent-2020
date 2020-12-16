@@ -71,10 +71,10 @@ getFieldOrder rules tickets = head possibleFieldOrders
   where
     numCols = length . head . map (\(Ticket t) -> t) $ tickets
     allFields = Set.fromList rules
+    ticketValues pos = map (\(Ticket t) -> t !! pos) tickets
     possibleFieldsForColumn pos remaining = do
       rule <- Set.toList remaining
-      let ticketValues = map (\(Ticket t) -> t !! pos) tickets
-      guard . all (valueInRangeForRule rule) $ ticketValues
+      guard . all (valueInRangeForRule rule) $ ticketValues pos
       pure rule
     possibleFields :: Map Int (Set Rule)
     possibleFields = Map.fromList . map (\pos -> (pos, Set.fromList $ possibleFieldsForColumn pos allFields)) $ [0..numCols - 1]
