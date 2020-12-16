@@ -82,8 +82,9 @@ getFieldOrder rules tickets = head possibleFieldOrders
       where
         toOrder = map snd . Map.toAscList
         orders = map (\(_, _, m, _) -> toOrder m) . iterateUntilM (\(pos, _, _, _) -> Set.size pos == 0) f $ (Set.fromList [0..numCols - 1], allFields, Map.empty, possibleFields)
+        idealCandidate = minimumBy (comparing (Set.size . snd)) . Map.toList
         f (remainingPositions, remainingFields, positionToFieldMap, candidates) = do
-          let (pos, candidateFieldsForPosition) = minimumBy (comparing (Set.size . snd)) . Map.toList $ candidates
+          let (pos, candidateFieldsForPosition) = idealCandidate candidates
           rule <- Set.toList candidateFieldsForPosition
           let newRemainingPositions = Set.delete pos remainingPositions
           let newRemainingFields = Set.delete rule remainingFields
