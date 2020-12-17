@@ -30,8 +30,10 @@ dependencies:
 - monad-loops
 - mtl
 - parsec
+- primitive
 - tasty
 - tasty-golden
+- vector
 
 library:
   source-dirs: src

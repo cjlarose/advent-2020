@@ -2,8 +2,12 @@ module Advent2020.Day15
   ( solve
   ) where
 
-import qualified Data.IntMap.Strict as IntMap
-import Data.IntMap.Strict (IntMap)
+import Control.Monad (foldM)
+import Control.Monad.Loops (iterateUntilM)
+import Control.Monad.ST (runST)
+import Control.Monad.Primitive (PrimMonad, PrimState)
+import qualified Data.Vector.Unboxed.Mutable as V
+import Data.Vector.Unboxed.Mutable (MVector)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine)
 import Text.Parsec (sepBy1, eof)
@@ -15,19 +19,44 @@ import Advent.CommonParsers (integerWithOptionalLeadingSign)
 inputParser :: Parser [Int]
 inputParser = sepBy1 integerWithOptionalLeadingSign (char ',') <* endOfLine <* eof
 
-spokenAt :: Int -> [Int] -> Int
-spokenAt k inits = go (length inits) (last inits) mostRecentIndex
-  where
-    mostRecentIndex :: IntMap Int
-    mostRecentIndex = IntMap.fromList . zip (init inits) $ [0..]
+writeSafely :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> Int -> m (MVector (PrimState m) Int)
+writeSafely vector i val = do
+  newVec <- iterateUntilM (\v -> i < V.length v)
+              (\v -> do
+                let oldLength = V.length v
+                new <- V.grow v oldLength
+                let newLength = V.length new
+                mapM_ (\i -> V.write new i (-1)) [oldLength..newLength-1]
+                pure new)
+              vector
+  V.write newVec i val
+  pure newVec
 
-    go :: Int -> Int -> IntMap Int -> Int
-    go i last acc
-      | i == k = last
-      | otherwise = go (i + 1) next newAcc
-          where
-            (oldVal, newAcc) = IntMap.insertLookupWithKey (\_ v _ -> v) last (i - 1) acc
-            next = maybe 0 (\j -> i - j - 1) oldVal
+readSafely :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> m (Maybe Int)
+readSafely vector i = do
+  let currentSize = V.length vector
+  if i >= currentSize
+  then pure Nothing
+  else do
+    val <- V.read vector i
+    if val == -1
+    then pure Nothing
+    else pure $ Just val
+
+spokenAt :: Int -> [Int] -> Int
+spokenAt k inits = runST $ do
+  let initialElements :: [(Int, Int)]
+      initialElements = zip (init inits) [0..]
+  start <- V.replicate 8 (-1)
+  mostRecentIndex <- foldM (\vec (element, index) -> writeSafely vec element index) start initialElements
+  let f (i, prev, vec) = do oldVal <- readSafely vec prev
+                            newVec <- writeSafely vec prev (i - 1)
+                            let next = case oldVal of
+                                         Just j -> i - j - 1
+                                         Nothing -> 0
+                            pure (i + 1, next, newVec)
+  (_, last, _) <- iterateUntilM (\(i, _, _) -> i == k) f (length inits, last inits, mostRecentIndex)
+  pure last
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults starting = PuzzleAnswerPair (part1, part2)
