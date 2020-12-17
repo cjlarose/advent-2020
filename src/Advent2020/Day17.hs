@@ -14,10 +14,13 @@ import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf)
 
-type Coord = (Int, Int, Int)
-type PocketDimension = Set Coord
+type Coord2D = (Int, Int)
+type Pocket2Dimension = Set Coord2D
 
-inputParser :: Parser PocketDimension
+type Coord3D = (Int, Int, Int)
+type Pocket3Dimension = Set Coord3D
+
+inputParser :: Parser Pocket2Dimension
 inputParser = toSet <$> linesOf row
   where
     row = many1 seat
@@ -27,9 +30,9 @@ inputParser = toSet <$> linesOf row
       let line = sourceLine pos
       let col = sourceColumn pos
       pure . Just $ (line - 1, col - 1)
-    toSet xs = Set.fromList . map (\(i, j) -> (j, i, 0)) . catMaybes . concat $ xs
+    toSet xs = Set.fromList . map (\(i, j) -> (j, i)) . catMaybes . concat $ xs
 
-neighbors :: Coord -> Set Coord
+neighbors :: Coord3D -> Set Coord3D
 neighbors coord@(x, y, z) = Set.fromList $ do
   newX <- [x-1..x+1]
   newY <- [y-1..y+1]
@@ -38,7 +41,7 @@ neighbors coord@(x, y, z) = Set.fromList $ do
   guard $ neighbor /= coord
   pure neighbor
 
-simulateCycles :: Int -> PocketDimension -> PocketDimension
+simulateCycles :: Int -> Pocket3Dimension -> Pocket3Dimension
 simulateCycles 0 active = active
 simulateCycles rounds active = simulateCycles (pred rounds) newActive
   where
@@ -49,13 +52,16 @@ simulateCycles rounds active = simulateCycles (pred rounds) newActive
     remainingActive = Set.filter ((\k -> k == 2 || k == 3) . Set.size . activeNeighbors) active
     newActive = Set.union newlyActive remainingActive
 
-activeCubes :: PocketDimension -> Int
+activeCubes :: Pocket3Dimension -> Int
 activeCubes = Set.size
 
-printResults :: PocketDimension -> PuzzleAnswerPair
+extendIntoThirdDimension :: Coord2D -> Coord3D
+extendIntoThirdDimension (x, y) = (x, y, 0)
+
+printResults :: Pocket2Dimension -> PuzzleAnswerPair
 printResults initialState = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . activeCubes . simulateCycles 6 $ initialState
+    part1 = show . activeCubes . simulateCycles 6 . Set.map extendIntoThirdDimension $ initialState
     part2 = "not implemented"
 
 solve :: IO (Either String PuzzleAnswerPair)
