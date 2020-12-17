@@ -15,7 +15,7 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf)
 
 type Coord2D = (Int, Int)
-type Pocket2Dimension = Set Coord2D
+type CrossSection2D = Set Coord2D
 
 newtype Coord3D = Coord3D (Int, Int, Int) deriving (Eq, Ord)
 newtype Coord4D = Coord4D (Int, Int, Int, Int) deriving (Eq, Ord)
@@ -45,7 +45,7 @@ instance HigherDimensionCoord Coord4D where
     pure neighbor
   from2d (x, y) = Coord4D (x, y, 0, 0)
 
-inputParser :: Parser Pocket2Dimension
+inputParser :: Parser CrossSection2D
 inputParser = toSet <$> linesOf row
   where
     row = many1 seat
@@ -70,7 +70,7 @@ simulateCycles rounds active = simulateCycles (pred rounds) newActive
 
 activeCubes = Set.size
 
-printResults :: Pocket2Dimension -> PuzzleAnswerPair
+printResults :: CrossSection2D -> PuzzleAnswerPair
 printResults initialState = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . activeCubes . simulateCycles 6 . Set.map (from2d :: Coord2D -> Coord3D) $ initialState
