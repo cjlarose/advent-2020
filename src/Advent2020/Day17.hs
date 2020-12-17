@@ -48,8 +48,8 @@ instance HigherDimensionCoord Coord4D where
 inputParser :: Parser CrossSection2D
 inputParser = toSet <$> linesOf row
   where
-    row = many1 seat
-    seat = (Nothing <$ char '.') <|> (recordPos <* char '#')
+    row = many1 coord
+    coord = (Nothing <$ char '.') <|> (recordPos <* char '#')
     recordPos = do
       pos <- getPosition
       let line = sourceLine pos
