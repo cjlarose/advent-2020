@@ -25,4 +25,4 @@ withSuccessfulParse :: Parser a -> (a -> PuzzleAnswerPair) -> B.ByteString -> Ei
 withSuccessfulParse p f x = either (Left . show) (Right . f) $ Text.Parsec.parse p "" x
 
 withTwoSuccessfulParses :: Parser a -> Parser b -> (a -> b -> PuzzleAnswerPair) -> B.ByteString -> Either String PuzzleAnswerPair
-withTwoSuccessfulParses pa pb = withSuccessfulParse ((\a b -> (a, b)) <$> lookAhead pa <*> pb) . uncurry
+withTwoSuccessfulParses pa pb = withSuccessfulParse ((,) <$> lookAhead pa <*> pb) . uncurry
