@@ -33,15 +33,10 @@ writeSafely vector i val = do
   pure newVec
 
 readSafely :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> m (Maybe Int)
-readSafely vector i = do
-  let currentSize = V.length vector
-  if i >= currentSize
+readSafely vector i =
+  if i >= V.length vector
   then pure Nothing
-  else do
-    val <- V.read vector i
-    if val == -1
-    then pure Nothing
-    else pure $ Just val
+  else (\val -> if val == -1 then Nothing else Just val) <$> V.read vector i
 
 spokenAt :: Int -> [Int] -> Int
 spokenAt k inits = runST $ do
