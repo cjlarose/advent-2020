@@ -20,8 +20,7 @@ inputParser = (,) <$> lookAhead (linesOf binaryExpression) <*> linesOf binaryExp
     binaryExpression = chainl1 term (char ' ' *> operator <* char ' ')
     term = literalExpression <|> parenthesizedExpression
     parenthesizedExpression = between (char '(') (char ')') binaryExpression
-    operator :: Parser (Expression -> Expression -> Expression)
-    operator = ((`BinaryExpression` Plus) <$ char '+') <|> ((`BinaryExpression` Times) <$ char '*')
+    operator = mulOp <|> addOp
     literalExpression = Literal <$> integerWithOptionalLeadingSign
 
     binaryExpression' = chainl1 factor (try (char ' ' *> mulOp <* char ' '))
