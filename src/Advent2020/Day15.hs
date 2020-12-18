@@ -49,14 +49,14 @@ spokenAt k inits = runST $ do
       initialElements = zip (init inits) [0..]
   start <- V.new 8
   mostRecentIndex <- foldM (\vec (element, index) -> recordLastSeenIndex vec element index) start initialElements
-  let f (i, prev, vec) = do oldVal <- lastIndexOf vec prev
-                            newVec <- recordLastSeenIndex vec prev (i - 1)
-                            let next = case oldVal of
-                                         Just j -> i - j - 1
-                                         Nothing -> 0
-                            pure (i + 1, next, newVec)
-  (_, last, _) <- iterateUntilM (\(i, _, _) -> i == k) f (length inits, last inits, mostRecentIndex)
-  pure last
+  let go i prev vec | i == k = pure prev
+                    | otherwise = do oldVal <- lastIndexOf vec prev
+                                     newVec <- recordLastSeenIndex vec prev (i - 1)
+                                     let next = case oldVal of
+                                                  Just j -> i - j - 1
+                                                  Nothing -> 0
+                                     go (i + 1) next newVec
+  go (length inits) (last inits) mostRecentIndex
 
 printResults :: [Int] -> PuzzleAnswerPair
 printResults starting = PuzzleAnswerPair (part1, part2)
