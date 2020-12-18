@@ -39,12 +39,11 @@ totalRead vector i =
   else Just <$> V.read vector i
 
 lastIndexOf :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> m (Maybe Int)
-lastIndexOf vector i = do
-  val <- totalRead vector i
-  pure $ case val of
-           Nothing -> Nothing
-           Just (-1) -> Nothing
-           Just index -> Just index
+lastIndexOf vector i = parseValue <$> totalRead vector i
+  where
+    parseValue Nothing = Nothing
+    parseValue (Just (-1)) = Nothing
+    parseValue (Just index) = Just index
 
 spokenAt :: Int -> [Int] -> Int
 spokenAt k inits = runST $ do
