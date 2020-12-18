@@ -3,11 +3,11 @@ module Advent2020.Day18
   ) where
 
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec (try, char, (<|>), between, chainl1, lookAhead)
+import Text.Parsec (char, (<|>), between, chainl1, lookAhead, spaces, many1)
 
 import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, integerWithOptionalLeadingSign)
+import Advent.CommonParsers (integerWithOptionalLeadingSign)
 
 data Operator = Plus | Times deriving Show
 data Expression = BinaryExpression Expression Operator Expression
@@ -15,20 +15,24 @@ data Expression = BinaryExpression Expression Operator Expression
                 deriving Show
 
 inputParser :: Parser ([Expression], [Expression])
-inputParser = (,) <$> lookAhead (linesOf binaryExpression) <*> linesOf binaryExpression'
+inputParser = (,) <$> lookAhead (many1 binaryExpression) <*> many1 mulExpression
   where
-    binaryExpression = chainl1 term (char ' ' *> operator <* char ' ')
-    term = literalExpression <|> parenthesizedExpression
-    parenthesizedExpression = between (char '(') (char ')') binaryExpression
-    operator = mulOp <|> addOp
-    literalExpression = Literal <$> integerWithOptionalLeadingSign
+    token :: Parser a -> Parser a
+    token p = p <* spaces
+    symbol = token . char
 
-    binaryExpression' = chainl1 factor (try (char ' ' *> mulOp <* char ' '))
-    factor = chainl1 term' (try (char ' ' *> addOp <* char ' '))
-    term' = literalExpression <|> parenthesizedExpression'
-    parenthesizedExpression' = between (char '(') (char ')') binaryExpression'
-    mulOp = (`BinaryExpression` Times) <$ char '*'
-    addOp = (`BinaryExpression` Plus) <$ char '+'
+    binaryExpression = chainl1 term operator
+    term = literalExpression <|> parenthesizedExpression
+    parenthesizedExpression = between (symbol '(') (symbol ')') binaryExpression
+    operator = mulOp <|> addOp
+    literalExpression = Literal <$> token integerWithOptionalLeadingSign
+
+    mulExpression = chainl1 factor mulOp
+    factor = chainl1 addend addOp
+    addend = literalExpression <|> parenthesizedMulExpression
+    parenthesizedMulExpression = between (symbol '(') (symbol ')') mulExpression
+    mulOp = (`BinaryExpression` Times) <$ symbol '*'
+    addOp = (`BinaryExpression` Plus) <$ symbol '+'
 
 evaluate :: Expression -> Integer
 evaluate (Literal x) = x
