@@ -2,12 +2,10 @@ module Advent.Input
   ( getProblemInputAsString
   , getProblemInputAsByteString
   , withSuccessfulParse
-  , withTwoSuccessfulParses
   ) where
 
 import qualified Data.ByteString as B
 import qualified Text.Parsec (parse)
-import Text.Parsec (lookAhead)
 import Text.Parsec.ByteString (Parser)
 
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair)
@@ -23,6 +21,3 @@ getProblemInputAsByteString = B.readFile . path
 
 withSuccessfulParse :: Parser a -> (a -> PuzzleAnswerPair) -> B.ByteString -> Either String PuzzleAnswerPair
 withSuccessfulParse p f x = either (Left . show) (Right . f) $ Text.Parsec.parse p "" x
-
-withTwoSuccessfulParses :: Parser a -> Parser b -> (a -> b -> PuzzleAnswerPair) -> B.ByteString -> Either String PuzzleAnswerPair
-withTwoSuccessfulParses pa pb = withSuccessfulParse ((,) <$> lookAhead pa <*> pb) . uncurry
