@@ -7,7 +7,7 @@ import Control.Monad.Loops (iterateUntilM)
 import Control.Monad.ST (runST)
 import Control.Monad.Primitive (PrimMonad, PrimState)
 import qualified Data.Vector.Unboxed.Mutable as V
-import Data.Vector.Unboxed.Mutable (MVector)
+import Data.Vector.Unboxed.Mutable (MVector, Unbox)
 import Text.Parsec.ByteString (Parser)
 import Text.Parsec.Char (char, endOfLine)
 import Text.Parsec (sepBy1, eof)
@@ -32,11 +32,19 @@ writeSafely vector i val = do
   V.write newVec i val
   pure newVec
 
-lastIndexOf :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> m (Maybe Int)
-lastIndexOf vector i =
+totalRead :: (PrimMonad m, Unbox a) => MVector (PrimState m) a -> Int -> m (Maybe a)
+totalRead vector i =
   if i >= V.length vector
   then pure Nothing
-  else (\val -> if val == -1 then Nothing else Just val) <$> V.read vector i
+  else Just <$> V.read vector i
+
+lastIndexOf :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> m (Maybe Int)
+lastIndexOf vector i = do
+  val <- totalRead vector i
+  pure $ case val of
+           Nothing -> Nothing
+           Just (-1) -> Nothing
+           Just index -> Just index
 
 spokenAt :: Int -> [Int] -> Int
 spokenAt k inits = runST $ do
