@@ -3,9 +3,9 @@ module Advent2020.Day18
   ) where
 
 import Text.Parsec.ByteString (Parser)
-import Text.Parsec (try, char, (<|>), between, chainl1, parse)
+import Text.Parsec (try, char, (<|>), between, chainl1)
 
-import Advent.Input (getProblemInputAsByteString)
+import Advent.Input (getProblemInputAsByteString, withTwoSuccessfulParses)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.CommonParsers (linesOf, integerWithOptionalLeadingSign)
 
@@ -40,15 +40,11 @@ evaluate (Literal x) = x
 evaluate (BinaryExpression lhs Plus rhs) = evaluate lhs + evaluate rhs
 evaluate (BinaryExpression lhs Times rhs) = evaluate lhs * evaluate rhs
 
+printResults :: [Expression] -> [Expression] -> PuzzleAnswerPair
+printResults equalPredTree addFirstTree = PuzzleAnswerPair (part1, part2)
+  where
+    part1 = show . sum . map evaluate $ equalPredTree
+    part2 = show . sum . map evaluate $ addFirstTree
+
 solve :: IO (Either String PuzzleAnswerPair)
-solve = do
-  input <- getProblemInputAsByteString 18
-  case parse inputParser "" input of
-    Left err -> pure . Left . show $ err
-    Right expressions -> do
-      let part1 = show . sum . map evaluate $ expressions
-      case parse inputParser' "" input of
-        Left err -> pure . Left . show $ err
-        Right expressions' -> do
-          let part2 = show . sum . map evaluate $ expressions'
-          pure . Right . PuzzleAnswerPair $ (part1, part2)
+solve = withTwoSuccessfulParses inputParser inputParser' printResults <$> getProblemInputAsByteString 18
