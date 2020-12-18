@@ -32,8 +32,8 @@ writeSafely vector i val = do
   V.write newVec i val
   pure newVec
 
-readSafely :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> m (Maybe Int)
-readSafely vector i =
+lastIndexOf :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> m (Maybe Int)
+lastIndexOf vector i =
   if i >= V.length vector
   then pure Nothing
   else (\val -> if val == -1 then Nothing else Just val) <$> V.read vector i
@@ -44,7 +44,7 @@ spokenAt k inits = runST $ do
       initialElements = zip (init inits) [0..]
   start <- V.replicate 8 (-1)
   mostRecentIndex <- foldM (\vec (element, index) -> writeSafely vec element index) start initialElements
-  let f (i, prev, vec) = do oldVal <- readSafely vec prev
+  let f (i, prev, vec) = do oldVal <- lastIndexOf vec prev
                             newVec <- writeSafely vec prev (i - 1)
                             let next = case oldVal of
                                          Just j -> i - j - 1
