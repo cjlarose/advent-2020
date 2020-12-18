@@ -24,7 +24,7 @@ writeSafely vector i val = do
   newVec <- iterateUntilM (\v -> i < V.length v)
               (\v -> V.grow v (V.length v))
               vector
-  V.write newVec i val
+  V.unsafeWrite newVec i val
   pure newVec
 
 recordLastSeenIndex :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> Int -> m (MVector (PrimState m) Int)
@@ -34,7 +34,7 @@ totalRead :: (PrimMonad m, Unbox a) => MVector (PrimState m) a -> Int -> m (Mayb
 totalRead vector i =
   if i >= V.length vector
   then pure Nothing
-  else Just <$> V.read vector i
+  else Just <$> V.unsafeRead vector i
 
 lastIndexOf :: (PrimMonad m) => MVector (PrimState m) Int -> Int -> m (Maybe Int)
 lastIndexOf vector i = parseValue <$> totalRead vector i
