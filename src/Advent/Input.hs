@@ -5,10 +5,6 @@ module Advent.Input
   , withTwoSuccessfulParses
   ) where
 
-import System.IO (hPutStrLn, stderr)
-import System.Exit (exitFailure)
-import Data.Either (either)
-
 import qualified Data.ByteString as B
 import qualified Text.Parsec (parse)
 import Text.Parsec (lookAhead)
