@@ -36,6 +36,7 @@ inputParser = do
       term = (\xs m -> foldr (\i acc -> ruleFor i m <* acc) (pure "") xs) <$> some (token decimal)
       alternationOp = (\f g m -> try (f m) <|> g m) <$ symbol "|"
   rules <- linesOf rule <* eol
+  n <- maximum . map length <$> lookAhead (some (word <* eol))
   let ruleMap :: IntMap (IntMap (Parser Text) -> Parser Text)
       ruleMap = foldr (\(i, p) acc -> IntMap.insert i p acc) IntMap.empty rules
       ruleMap' = IntMap.map (\v -> v ruleMap') ruleMap
@@ -55,7 +56,7 @@ inputParser = do
         if length rest < k
         then pure . head $ rest
         else fail "no parse"
-      rule0' = choice . map (try . withPrefixSize) $ [100,99..1]
+      rule0' = choice . map (try . withPrefixSize) $ [n,n-1..1]
       message :: Parser MessageValidity
       message = try (Valid <$ (rule0 <* eol)) <|> (Invalid <$ (word <* eol))
       message' :: Parser MessageValidity
