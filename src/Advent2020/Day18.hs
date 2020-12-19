@@ -1,14 +1,15 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Advent2020.Day18
   ( solve
   ) where
 
 import Text.Megaparsec ((<|>), between, lookAhead, some, eof)
-import Text.Megaparsec.Char (char, space)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Control.Monad.Combinators.Expr (makeExprParser, Operator(InfixL))
 
 import Advent.Input (getProblemInputAsText)
-import Advent.Parse (Parser, parse)
+import Advent.Parse (Parser, parse, token, symbol)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
 data BinaryOperator = Plus | Times deriving Show
@@ -19,14 +20,11 @@ data Expression = BinaryExpression Expression BinaryOperator Expression
 inputParser :: Parser ([Expression], [Expression])
 inputParser = (,) <$> lookAhead (some equalPredExpression <* eof) <*> (some additionFirstExpression <* eof)
   where
-    token :: Parser a -> Parser a
-    token p = p <* space
-    symbol = token . char
-    parens = between (symbol '(') (symbol ')')
+    parens = between (symbol "(") (symbol ")")
 
     literalExpression = Literal <$> token decimal
-    mulOp = (`BinaryExpression` Times) <$ symbol '*'
-    addOp = (`BinaryExpression` Plus) <$ symbol '+'
+    mulOp = (`BinaryExpression` Times) <$ symbol "*"
+    addOp = (`BinaryExpression` Plus) <$ symbol "+"
 
     equalPredExpression = makeExprParser term equalPredOpTable
     equalPredOpTable = [ [ InfixL addOp , InfixL mulOp ] ]

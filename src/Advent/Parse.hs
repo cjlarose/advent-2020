@@ -4,10 +4,11 @@ module Advent.Parse
   , natural
   , word
   , token
+  , symbol
   ) where
 
 import Text.Megaparsec (Parsec, satisfy, some, errorBundlePretty)
-import Text.Megaparsec.Char (space)
+import Text.Megaparsec.Char (space, string)
 import Text.Megaparsec.Char.Lexer (decimal)
 import qualified Text.Megaparsec as Megaparsec
 import Data.Void (Void)
@@ -30,3 +31,6 @@ word = some . satisfy $ not . isSpace
 
 token :: Parser a -> Parser a
 token p = p <* space
+
+symbol :: Text -> Parser Text
+symbol = token . string
