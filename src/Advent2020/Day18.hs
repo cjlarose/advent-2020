@@ -26,7 +26,7 @@ inputParser = (,) <$> lookAhead (some equalPredExpression) <*> some additionFirs
     token p = p <* space
     symbol = token . char
 
-    literalExpression = Literal <$> token (token decimal)
+    literalExpression = Literal <$> token decimal
     mulOp = (`BinaryExpression` Times) <$ symbol '*'
     addOp = (`BinaryExpression` Plus) <$ symbol '+'
 
