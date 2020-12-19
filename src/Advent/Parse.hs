@@ -8,6 +8,7 @@ module Advent.Parse
   , token
   , symbol
   , parens
+  , brackets
   ) where
 
 import Text.Megaparsec (Parsec, satisfy, some, errorBundlePretty, between)
@@ -40,3 +41,6 @@ symbol = token . string
 
 parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
+
+brackets :: Parser a -> Parser a
+brackets = between (symbol "[") (symbol "]")

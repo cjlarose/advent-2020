@@ -15,12 +15,11 @@ import Control.Monad (foldM)
 import Control.Monad.Reader (MonadReader, Reader, runReader, asks)
 import Control.Monad.State.Strict (MonadState, StateT, gets, modify, runStateT)
 import Text.Megaparsec (some, try, eof, (<|>))
-import Text.Megaparsec.Char (string)
 import Text.Megaparsec.Char.Lexer (decimal)
 
 import Advent.Input (getProblemInputAsText)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.Parse (Parser, parse, natural, word, token)
+import Advent.Parse (Parser, parse, natural, word, token, symbol, brackets)
 import Advent.BitUtils (fromBits)
 
 newtype Address = Address Natural deriving Show
@@ -42,8 +41,8 @@ inputParser :: Parser [Instruction]
 inputParser = some instruction <* eof
   where
     instruction = try maskAssignment <|> writeToAddress
-    maskAssignment = SetMask <$> (string "mask = " *> (Mask <$> token word))
-    writeToAddress = Write <$> (string "mem[" *> (Address <$> natural)) <*> (string "] = " *> token decimal)
+    maskAssignment = SetMask . Mask <$> (symbol "mask" *> symbol "=" *> token word)
+    writeToAddress = Write <$> (symbol "mem" *> brackets (Address <$> natural) <* symbol "=") <*> token decimal
 
 -- | Applies a version 1 mask given a mask in its string form. A verison 1 mask
 -- is composed to two parts: a clearing mask and setting mask. The clearing
