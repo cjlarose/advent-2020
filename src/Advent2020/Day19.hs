@@ -49,7 +49,7 @@ inputParser = do
       --
       -- 0: some number of 42s <* (equal number 42s and 31s, at least one pair)
       -- 0: (k, k >= 1) number of 42s <* (z, 1 <= z < k) number of 31s
-      -- try k = 100, first, then go down from there
+      -- try k = n first, then go down from there
       withPrefixSize k = do
         count k (ruleMap' ! 42)
         rest <- some (ruleMap' ! 31)
