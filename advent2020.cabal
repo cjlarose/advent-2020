@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 13507effafa1eee1f426e0f1747bce2cf32936615c5a9f11244b5efc1c3bd40f
+-- hash: 39a6370cb5325a2f4caa7e8add2568781fb16ec99b085ac5ec0f9733eff78bcf
 
 name:           advent2020
 version:        0.1.0.0
@@ -63,12 +63,15 @@ library
     , containers
     , filepath
     , hashtables
+    , megaparsec
     , monad-loops
     , mtl
     , parsec
+    , parser-combinators
     , primitive
     , tasty
     , tasty-golden
+    , text
     , vector
   default-language: Haskell2010
 
@@ -88,12 +91,15 @@ executable advent2020-exe
     , containers
     , filepath
     , hashtables
+    , megaparsec
     , monad-loops
     , mtl
     , parsec
+    , parser-combinators
     , primitive
     , tasty
     , tasty-golden
+    , text
     , vector
   default-language: Haskell2010
 
@@ -114,11 +120,14 @@ test-suite advent2020-test
     , containers
     , filepath
     , hashtables
+    , megaparsec
     , monad-loops
     , mtl
     , parsec
+    , parser-combinators
     , primitive
     , tasty
     , tasty-golden
+    , text
     , vector
   default-language: Haskell2010

@@ -27,12 +27,15 @@ dependencies:
 - containers
 - filepath
 - hashtables
+- megaparsec
 - monad-loops
 - mtl
 - parsec
+- parser-combinators
 - primitive
 - tasty
 - tasty-golden
+- text
 - vector
 
 library:
