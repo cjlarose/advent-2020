@@ -2,37 +2,44 @@ module Advent2020.Day18
   ( solve
   ) where
 
-import Text.Parsec.ByteString (Parser)
-import Text.Parsec (char, (<|>), between, chainl1, lookAhead, spaces, many1)
+import Text.Megaparsec (Parsec, (<|>), between, lookAhead, some)
+import Text.Megaparsec.Char (char, space)
+import Text.Megaparsec.Char.Lexer (decimal)
+import Control.Monad.Combinators.Expr (makeExprParser, Operator(InfixL))
 
-import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
+import Advent.Input (getProblemInputAsText, withSuccessfulParse')
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (integerWithOptionalLeadingSign)
+import Data.Text (Text)
+import Data.Void (Void)
 
-data Operator = Plus | Times deriving Show
-data Expression = BinaryExpression Expression Operator Expression
+type Parser = Parsec Void Text
+
+data BinaryOperator = Plus | Times deriving Show
+data Expression = BinaryExpression Expression BinaryOperator Expression
                 | Literal Integer
                 deriving Show
 
 inputParser :: Parser ([Expression], [Expression])
-inputParser = (,) <$> lookAhead (many1 binaryExpression) <*> many1 mulExpression
+inputParser = (,) <$> lookAhead (some equalPredExpression) <*> some additionFirstExpression
   where
     token :: Parser a -> Parser a
-    token p = p <* spaces
+    token p = p <* space
     symbol = token . char
 
-    binaryExpression = chainl1 term operator
-    term = literalExpression <|> parenthesizedExpression
-    parenthesizedExpression = between (symbol '(') (symbol ')') binaryExpression
-    operator = mulOp <|> addOp
-    literalExpression = Literal <$> token integerWithOptionalLeadingSign
-
-    mulExpression = chainl1 factor mulOp
-    factor = chainl1 addend addOp
-    addend = literalExpression <|> parenthesizedMulExpression
-    parenthesizedMulExpression = between (symbol '(') (symbol ')') mulExpression
+    literalExpression = Literal <$> token (token decimal)
     mulOp = (`BinaryExpression` Times) <$ symbol '*'
     addOp = (`BinaryExpression` Plus) <$ symbol '+'
+
+    equalPredExpression = makeExprParser term equalPredOpTable
+    equalPredOpTable = [ [ InfixL addOp , InfixL mulOp ] ]
+    term = literalExpression <|> parenthesizedExpression
+    parenthesizedExpression = between (symbol '(') (symbol ')') equalPredExpression
+
+    additionFirstExpression = makeExprParser term' additionFirstOpTable
+    additionFirstOpTable = [ [ InfixL addOp ]
+                           , [ InfixL mulOp ] ]
+    term' = literalExpression <|> parenthesizedMulExpression
+    parenthesizedMulExpression = between (symbol '(') (symbol ')') additionFirstExpression
 
 evaluate :: Expression -> Integer
 evaluate (Literal x) = x
@@ -46,4 +53,4 @@ printResults (equalPredTree, addFirstTree) = PuzzleAnswerPair (part1, part2)
     part2 = show . sum . map evaluate $ addFirstTree
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 18
+solve = withSuccessfulParse' inputParser printResults <$> getProblemInputAsText 18
