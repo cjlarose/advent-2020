@@ -4,12 +4,12 @@ module Advent2020.Day18
   ( solve
   ) where
 
-import Text.Megaparsec ((<|>), between, lookAhead, some, eof)
+import Text.Megaparsec ((<|>), lookAhead, some, eof)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Control.Monad.Combinators.Expr (makeExprParser, Operator(InfixL))
 
 import Advent.Input (getProblemInputAsText)
-import Advent.Parse (Parser, parse, token, symbol)
+import Advent.Parse (Parser, parse, token, symbol, parens)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
 data BinaryOperator = Plus | Times deriving Show
@@ -20,8 +20,6 @@ data Expression = BinaryExpression Expression BinaryOperator Expression
 inputParser :: Parser ([Expression], [Expression])
 inputParser = (,) <$> lookAhead (some equalPredExpression <* eof) <*> (some additionFirstExpression <* eof)
   where
-    parens = between (symbol "(") (symbol ")")
-
     literalExpression = Literal <$> token decimal
     mulOp = (`BinaryExpression` Times) <$ symbol "*"
     addOp = (`BinaryExpression` Plus) <$ symbol "+"

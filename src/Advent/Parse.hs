@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Advent.Parse
   ( Parser
   , parse
@@ -5,9 +7,10 @@ module Advent.Parse
   , word
   , token
   , symbol
+  , parens
   ) where
 
-import Text.Megaparsec (Parsec, satisfy, some, errorBundlePretty)
+import Text.Megaparsec (Parsec, satisfy, some, errorBundlePretty, between)
 import Text.Megaparsec.Char (space, string)
 import Text.Megaparsec.Char.Lexer (decimal)
 import qualified Text.Megaparsec as Megaparsec
@@ -34,3 +37,6 @@ token p = p <* space
 
 symbol :: Text -> Parser Text
 symbol = token . string
+
+parens :: Parser a -> Parser a
+parens = between (symbol "(") (symbol ")")
