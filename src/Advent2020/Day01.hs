@@ -5,11 +5,15 @@ module Advent2020.Day01
 import Numeric.Natural (Natural)
 import qualified Data.Set as Set
 import Control.Monad (guard)
+import Text.Megaparsec (some, eof)
 
-import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
+import Advent.Input (getProblemInputAsText)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, natural)
 import Advent.ListUtils (subsetsOfCardinalityTwo)
+import Advent.Parse (Parser, parse, natural, token)
+
+inputParser :: Parser [Natural]
+inputParser = some (token natural) <* eof
 
 productOfSpecialPair :: [Natural] -> Natural
 productOfSpecialPair entries = x * y
@@ -41,4 +45,4 @@ printResults entries = PuzzleAnswerPair (part1, part2)
     part2 = show . productOfSpecialTriple $ entries
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse (linesOf natural) printResults <$> getProblemInputAsByteString 1
+solve = parse inputParser printResults <$> getProblemInputAsText 1
