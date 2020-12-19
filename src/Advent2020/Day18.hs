@@ -25,6 +25,7 @@ inputParser = (,) <$> lookAhead (some equalPredExpression) <*> some additionFirs
     token :: Parser a -> Parser a
     token p = p <* space
     symbol = token . char
+    parens = between (symbol '(') (symbol ')')
 
     literalExpression = Literal <$> token decimal
     mulOp = (`BinaryExpression` Times) <$ symbol '*'
@@ -33,13 +34,13 @@ inputParser = (,) <$> lookAhead (some equalPredExpression) <*> some additionFirs
     equalPredExpression = makeExprParser term equalPredOpTable
     equalPredOpTable = [ [ InfixL addOp , InfixL mulOp ] ]
     term = literalExpression <|> parenthesizedExpression
-    parenthesizedExpression = between (symbol '(') (symbol ')') equalPredExpression
+    parenthesizedExpression = parens equalPredExpression
 
     additionFirstExpression = makeExprParser term' additionFirstOpTable
     additionFirstOpTable = [ [ InfixL addOp ]
                            , [ InfixL mulOp ] ]
     term' = literalExpression <|> parenthesizedMulExpression
-    parenthesizedMulExpression = between (symbol '(') (symbol ')') additionFirstExpression
+    parenthesizedMulExpression = parens additionFirstExpression
 
 evaluate :: Expression -> Integer
 evaluate (Literal x) = x
