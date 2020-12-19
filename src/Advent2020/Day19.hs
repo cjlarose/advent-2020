@@ -53,7 +53,7 @@ inputParser = do
         count k (ruleMap' ! 42)
         rest <- some (ruleMap' ! 31)
         if length rest < k
-        then pure . head $ rest
+        then eol
         else fail "no parse"
       rule0' = do
         maxK <- length <$> lookAhead word
@@ -61,7 +61,7 @@ inputParser = do
       message :: Parser MessageValidity
       message = try (Valid <$ (rule0 <* eol)) <|> (Invalid <$ (word <* eol))
       message' :: Parser MessageValidity
-      message' = try (Valid <$ (rule0' <* eol)) <|> (Invalid <$ (word <* eol))
+      message' = try (Valid <$ rule0') <|> (Invalid <$ (word <* eol))
   ((,) <$> lookAhead (some message) <*> some message') <* eof
 
 printResults :: ([MessageValidity], [MessageValidity]) -> PuzzleAnswerPair
