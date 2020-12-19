@@ -2,7 +2,7 @@ module Advent2020.Day18
   ( solve
   ) where
 
-import Text.Megaparsec (Parsec, (<|>), between, lookAhead, some)
+import Text.Megaparsec (Parsec, (<|>), between, lookAhead, some, eof)
 import Text.Megaparsec.Char (char, space)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Control.Monad.Combinators.Expr (makeExprParser, Operator(InfixL))
@@ -20,7 +20,7 @@ data Expression = BinaryExpression Expression BinaryOperator Expression
                 deriving Show
 
 inputParser :: Parser ([Expression], [Expression])
-inputParser = (,) <$> lookAhead (some equalPredExpression) <*> some additionFirstExpression
+inputParser = (,) <$> lookAhead (some equalPredExpression <* eof) <*> (some additionFirstExpression <* eof)
   where
     token :: Parser a -> Parser a
     token p = p <* space
