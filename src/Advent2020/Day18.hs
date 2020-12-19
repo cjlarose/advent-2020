@@ -2,17 +2,14 @@ module Advent2020.Day18
   ( solve
   ) where
 
-import Text.Megaparsec (Parsec, (<|>), between, lookAhead, some, eof)
+import Text.Megaparsec ((<|>), between, lookAhead, some, eof)
 import Text.Megaparsec.Char (char, space)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Control.Monad.Combinators.Expr (makeExprParser, Operator(InfixL))
 
-import Advent.Input (getProblemInputAsText, withSuccessfulParse')
+import Advent.Input (getProblemInputAsText)
+import Advent.Parse (Parser, parse)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Data.Text (Text)
-import Data.Void (Void)
-
-type Parser = Parsec Void Text
 
 data BinaryOperator = Plus | Times deriving Show
 data Expression = BinaryExpression Expression BinaryOperator Expression
@@ -54,4 +51,4 @@ printResults (equalPredTree, addFirstTree) = PuzzleAnswerPair (part1, part2)
     part2 = show . sum . map evaluate $ addFirstTree
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse' inputParser printResults <$> getProblemInputAsText 18
+solve = parse inputParser printResults <$> getProblemInputAsText 18
