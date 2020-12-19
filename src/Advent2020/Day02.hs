@@ -1,15 +1,16 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Advent2020.Day02
   ( solve
   ) where
 
 import Numeric.Natural (Natural)
-import Text.Parsec.ByteString (Parser)
-import Text.Parsec (many1)
-import Text.Parsec.Char (string, lower, char)
+import Text.Megaparsec (some, eof)
+import Text.Megaparsec.Char (char, string, lowerChar)
 
-import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
+import Advent.Input (getProblemInputAsText)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, natural)
+import Advent.Parse (Parser, parse, natural, token, word)
 
 type Password = String
 data PasswordPolicy = PasswordPolicy { minOccurences :: Natural
@@ -17,14 +18,11 @@ data PasswordPolicy = PasswordPolicy { minOccurences :: Natural
                                      , character :: Char } deriving Show
 data PasswordLine = PasswordLine PasswordPolicy Password
 
-passwordPolicy :: Parser PasswordPolicy
-passwordPolicy = PasswordPolicy <$> natural <* char '-' <*> natural <* char ' ' <*> lower
-
-passwordLine :: Parser PasswordLine
-passwordLine = PasswordLine <$> passwordPolicy <* string ": " <*> many1 lower
-
 passwordLines :: Parser [PasswordLine]
-passwordLines = linesOf passwordLine
+passwordLines = some passwordLine <* eof
+  where
+    passwordLine = PasswordLine <$> passwordPolicy <* string ": " <*> token word
+    passwordPolicy = PasswordPolicy <$> natural <* char '-' <*> natural <* char ' ' <*> lowerChar
 
 checkValid :: PasswordLine -> Bool
 checkValid (PasswordLine (PasswordPolicy minOccurences maxOccurences character) password) = occurences <= maxOccurences && occurences >= minOccurences
@@ -41,4 +39,4 @@ printResults lines = PuzzleAnswerPair (part1, part2)
     part2 = show . length . filter checkValidPositions $ lines
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse passwordLines printResults <$> getProblemInputAsByteString 2
+solve = parse passwordLines printResults <$> getProblemInputAsText 2

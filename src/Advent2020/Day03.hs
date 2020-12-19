@@ -1,14 +1,15 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Advent2020.Day03
   ( solve
   ) where
 
-import Text.Parsec.ByteString (Parser)
-import Text.Parsec (many1, (<|>))
-import Text.Parsec.Char (char)
+import Text.Megaparsec ((<|>), some, eof)
+import Text.Megaparsec.Char (char)
 
-import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
+import Advent.Input (getProblemInputAsText)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf)
+import Advent.Parse (Parser, parse, linesOf)
 
 data MapSquare = OpenSquare | Tree deriving Show
 type MapLine = [MapSquare]
@@ -16,9 +17,9 @@ type TreeMap = [MapLine]
 data Slope = Slope { dj :: Int, di :: Int }
 
 treeMap :: Parser TreeMap
-treeMap = linesOf mapLine
+treeMap = linesOf mapLine <* eof
   where
-    mapLine = cycle <$> many1 mapSquare
+    mapLine = cycle <$> some mapSquare
     mapSquare = (OpenSquare <$ char '.') <|> (Tree <$ char '#')
 
 numTreesOnSlope :: Slope -> TreeMap -> Int
@@ -38,4 +39,4 @@ printResults lines = PuzzleAnswerPair (part1, part2)
     part2 = show . product . map (`numTreesOnSlope` lines) $ slopes
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse treeMap printResults <$> getProblemInputAsByteString 3
+solve = parse treeMap printResults <$> getProblemInputAsText 3

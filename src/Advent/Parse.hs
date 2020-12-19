@@ -9,10 +9,11 @@ module Advent.Parse
   , symbol
   , parens
   , brackets
+  , linesOf
   ) where
 
 import Text.Megaparsec (Parsec, satisfy, some, errorBundlePretty, between)
-import Text.Megaparsec.Char (space, string)
+import Text.Megaparsec.Char (space, string, eol)
 import Text.Megaparsec.Char.Lexer (decimal)
 import qualified Text.Megaparsec as Megaparsec
 import Data.Void (Void)
@@ -44,3 +45,6 @@ parens = between (symbol "(") (symbol ")")
 
 brackets :: Parser a -> Parser a
 brackets = between (symbol "[") (symbol "]")
+
+linesOf :: Parser a -> Parser [a]
+linesOf p = some (p <* eol)
