@@ -49,18 +49,18 @@ inputParser = do
       -- 0: some number of 42s <* (equal number 42s and 31s, at least one pair)
       -- 0: (k, k >= 1) number of 42s <* (z, 1 <= z < k) number of 31s
       -- try k = 100, first, then go down from there
-      rule02' k = do
+      withPrefixSize k = do
         count k (ruleMap' ! 42)
         rest <- some (ruleMap' ! 31)
         if length rest < k
         then pure . head $ rest
         else fail "no parse"
-      rule02 = choice . map (try . rule02') $ [100,99..1]
+      rule0' = choice . map (try . withPrefixSize) $ [100,99..1]
       message :: Parser MessageValidity
       message = try (Valid <$ (rule0 <* eol)) <|> (Invalid <$ (word <* eol))
-      message2 :: Parser MessageValidity
-      message2 = try (Valid <$ (rule02 <* eol)) <|> (Invalid <$ (word <* eol))
-  ((,) <$> lookAhead (some message) <*> some message2) <* eof
+      message' :: Parser MessageValidity
+      message' = try (Valid <$ (rule0' <* eol)) <|> (Invalid <$ (word <* eol))
+  ((,) <$> lookAhead (some message) <*> some message') <* eof
 
 printResults :: ([MessageValidity], [MessageValidity]) -> PuzzleAnswerPair
 printResults (messagesBeforeChange, messagesAfterChange) = PuzzleAnswerPair (part1, part2)
