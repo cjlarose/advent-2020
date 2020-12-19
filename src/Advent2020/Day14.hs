@@ -1,6 +1,7 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Advent2020.Day14
   ( solve
@@ -13,13 +14,13 @@ import Data.Bits ((.|.), (.&.), testBit)
 import Control.Monad (foldM)
 import Control.Monad.Reader (MonadReader, Reader, runReader, asks)
 import Control.Monad.State.Strict (MonadState, StateT, gets, modify, runStateT)
-import Text.Parsec.ByteString (Parser)
-import Text.Parsec.Char (string)
-import Text.Parsec ((<|>), try)
+import Text.Megaparsec (some, try, eof, (<|>))
+import Text.Megaparsec.Char (string)
+import Text.Megaparsec.Char.Lexer (decimal)
 
-import Advent.Input (getProblemInputAsByteString, withSuccessfulParse)
+import Advent.Input (getProblemInputAsText)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
-import Advent.CommonParsers (linesOf, natural, word, integerWithOptionalLeadingSign)
+import Advent.Parse (Parser, parse, natural, word, token)
 import Advent.BitUtils (fromBits)
 
 newtype Address = Address Natural deriving Show
@@ -38,11 +39,11 @@ newtype VM a = VM {
 } deriving (Monad, Applicative, Functor, MonadState MachineState, ProgramConfig)
 
 inputParser :: Parser [Instruction]
-inputParser = linesOf instruction 
+inputParser = some instruction <* eof
   where
     instruction = try maskAssignment <|> writeToAddress
-    maskAssignment = SetMask <$> (string "mask = " *> (Mask <$> word))
-    writeToAddress = Write <$> (string "mem[" *> (Address <$> natural)) <*> (string "] = " *> integerWithOptionalLeadingSign)
+    maskAssignment = SetMask <$> (string "mask = " *> (Mask <$> token word))
+    writeToAddress = Write <$> (string "mem[" *> (Address <$> natural)) <*> (string "] = " *> token decimal)
 
 -- | Applies a version 1 mask given a mask in its string form. A verison 1 mask
 -- is composed to two parts: a clearing mask and setting mask. The clearing
@@ -93,4 +94,4 @@ printResults program = PuzzleAnswerPair (part1, part2)
     part2 = show $ executeProgram program . ProgramBehavior (const id) $ applyMaskV2
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = withSuccessfulParse inputParser printResults <$> getProblemInputAsByteString 14
+solve = parse inputParser printResults <$> getProblemInputAsText 14
