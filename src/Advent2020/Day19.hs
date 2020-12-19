@@ -8,10 +8,10 @@ import qualified Data.IntMap as IntMap
 import Data.IntMap (IntMap, (!))
 import qualified Data.Text as Text
 import Data.Text (Text)
-import Text.Megaparsec (eof, (<|>), try, some, skipMany)
+import Text.Megaparsec (eof, (<|>), try, some, skipMany, lookAhead)
 import Text.Megaparsec.Char (eol, char, string, lowerChar)
 import Text.Megaparsec.Char.Lexer (decimal)
-import Control.Applicative.Combinators (between)
+import Control.Applicative.Combinators (between, count, choice)
 import Control.Monad.Combinators.Expr (makeExprParser, Operator(InfixL))
 
 import Advent.Input (getProblemInputAsText)
@@ -20,7 +20,7 @@ import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
 data MessageValidity = Valid | Invalid deriving Show
 
-inputParser :: Parser [MessageValidity]
+inputParser :: Parser ([MessageValidity], [MessageValidity])
 inputParser = do
   let token :: Parser a -> Parser a
       token p = p <* skipMany (char ' ')
@@ -40,17 +40,35 @@ inputParser = do
       ruleMap = foldr (\(i, p) acc -> IntMap.insert i p acc) IntMap.empty rules
       ruleMap' = IntMap.map (\v -> v ruleMap') ruleMap
       rule0 = ruleMap' ! 0
+      -- 0 is the only rule that uses 8 and 11
+      -- let's just replace 0
+      -- 0: 8 11
+      -- 8: 42 | 42 8 -- any number of 42s repeated, at least one
+      -- 11: 42 31 | 42 11 31 -- balanced 42 and 31, at least one pair
+      --
+      -- 0: some number of 42s <* (equal number 42s and 31s, at least one pair)
+      -- 0: (k, k >= 1) number of 42s <* (z, 1 <= z < k) number of 31s
+      -- try k = 100, first, then go down from there
+      rule02' k = do
+        count k (ruleMap' ! 42)
+        rest <- some (ruleMap' ! 31)
+        if length rest < k
+        then pure . head $ rest
+        else fail "no parse"
+      rule02 = choice . map (try . rule02') $ [100,99..1]
       message :: Parser MessageValidity
       message = try (Valid <$ (rule0 <* eol)) <|> (Invalid <$ (word <* eol))
-  some message <* eof
+      message2 :: Parser MessageValidity
+      message2 = try (Valid <$ (rule02 <* eol)) <|> (Invalid <$ (word <* eol))
+  ((,) <$> lookAhead (some message) <*> some message2) <* eof
 
-printResults :: [MessageValidity] -> PuzzleAnswerPair
-printResults messages = PuzzleAnswerPair (part1, part2)
+printResults :: ([MessageValidity], [MessageValidity]) -> PuzzleAnswerPair
+printResults (messagesBeforeChange, messagesAfterChange) = PuzzleAnswerPair (part1, part2)
   where
     isValid Valid = True
     isValid Invalid = False
-    part1 = show . length . filter isValid $ messages
-    part2 = "not implemented"
+    part1 = show . length . filter isValid $ messagesBeforeChange
+    part2 = show . length . filter isValid $ messagesAfterChange
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = parse inputParser printResults <$> getProblemInputAsText 19
