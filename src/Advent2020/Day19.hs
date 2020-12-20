@@ -57,10 +57,10 @@ inputParser = do
       -- 0: (k, k >= 1) number of 42s <* (z, 1 <= z < k) number of 31s
       -- try k = n first, then go down from there, where n is the length of the message
       withPrefixSize k = do
-        count k (ruleMap ! 42)
+        prefix <- count k (ruleMap ! 42)
         rest <- some (ruleMap ! 31)
         if length rest < k
-        then head rest <$ eol
+        then concat (prefix ++ rest) <$ eol
         else fail "no parse"
       matchesRule0' = do
         maxK <- length <$> lookAhead word
