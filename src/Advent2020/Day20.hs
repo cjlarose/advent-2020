@@ -146,11 +146,13 @@ jigsaw tiles = completedPuzzles
     completedPuzzles = map (\(m, _, _) -> m) . iterateUntilM isComplete selectPiece $ searchStart
 
 extractImage :: Jigsaw -> Image
-extractImage _ = Image pixels width height
+extractImage puzzle = Image pixels width height
   where
-    pixels = []
-    width = 0
-    height = 0
+    tilesInRow i = map (\j -> puzzle ! (i, j)) [0..11]
+    toBits = map (== '#')
+    pixels = concatMap (map (fromBits . toBits)) . foldr (\i -> zipWith (++) (map getCenter . tilesInRow $ i)) (replicate 8 []) $ [0..11]
+    width = 12 * 8
+    height = 12 * 8
 
 numSeaMonsters :: Image -> Int
 numSeaMonsters _ = 0
