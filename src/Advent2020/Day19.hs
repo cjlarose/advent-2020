@@ -28,35 +28,26 @@ token p = p <* skipMany (char ' ')
 productionsAST :: Parser Productions
 productionsAST = Productions . foldr (\(id, r) acc -> IntMap.insert id r acc) IntMap.empty <$> rules
   where
-    rules :: Parser [(Int, Replacement)]
     rules = linesOf rule <* eol
-    rule :: Parser (Int, Replacement)
     rule = (,) <$> (decimal <* symbol ":") <*> (literalRule <|> choiceRule)
-    literalRule :: Parser Replacement
     literalRule = Terminal <$> token (between (char '"') (char '"') lowerChar)
-    choiceRule :: Parser Replacement
     choiceRule = Alternatives <$> sepBy1 (some (token decimal)) (symbol "|")
 
 parserForDeterministicCFG :: Productions -> (IntMap (Parser Text), Parser MessageValidity)
 parserForDeterministicCFG (Productions rules) = (ruleMap', startRule)
   where
-    ruleMap :: IntMap (IntMap (Parser Text) -> Parser Text)
     ruleMap = IntMap.map toParser rules
     toParser :: Replacement -> IntMap (Parser Text) -> Parser Text
     toParser (Terminal c) _ = string . Text.singleton $ c
     toParser (Alternatives options) m = choice . map (try . parserForNonterminalSequence m) $ options
-    parserForNonterminalSequence :: IntMap (Parser Text) -> [Int] -> Parser Text
     parserForNonterminalSequence m = foldr (\x acc -> (m ! x) <* acc) (pure "")
     ruleMap' = IntMap.map (\v -> v ruleMap') ruleMap
-    startRule :: Parser MessageValidity
     startRule = try (Valid <$ ((ruleMap' ! 0) <* eol)) <|> (Invalid <$ (word <* eol))
 
 inputParser :: Parser ([MessageValidity], [MessageValidity])
 inputParser = do
   productions <- productionsAST
-  let matchesRule0 :: Parser MessageValidity
-      ruleMap :: IntMap (Parser Text)
-      (ruleMap, matchesRule0) = parserForDeterministicCFG productions
+  let (ruleMap, matchesRule0) = parserForDeterministicCFG productions
       -- 0 is the only rule that uses 8 and 11
       -- let's just replace 0
       -- 0: 8 11
