@@ -19,6 +19,7 @@ import Control.Monad.Combinators (count)
 import Advent.Input (getProblemInputAsText)
 import Advent.Parse (Parser, parse, token, symbol)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
+import Advent.BitUtils (fromBits)
 
 type Edge = [Char]
 data Edges = Edges { getTop :: Edge
@@ -29,6 +30,11 @@ data Edges = Edges { getTop :: Edge
 type TileId = Integer
 data Tile = Tile { getId :: TileId
                  , getEdges :: Edges } deriving (Show, Ord, Eq)
+type Jigsaw = Map (Int, Int) Tile
+data Image = Image { getPixels :: [Integer]
+                   , getWidth :: Int
+                   , getHeight :: Int
+                   }
 
 inputParser :: Parser [Tile]
 inputParser = some tile <* eof
@@ -97,7 +103,7 @@ globallyDistinctEdges tiles = Set.unions distinctEdgePairs
     edgePairsByTileId = foldr (\(edgePair, tile) -> Map.insertWith Set.union edgePair (Set.singleton . getId $ tile)) Map.empty tileEdges
     distinctEdgePairs = Map.keys . Map.filter ((== 1) . Set.size) $ edgePairsByTileId
 
-jigsaw :: [Tile] -> [Map (Integer, Integer) Tile]
+jigsaw :: [Tile] -> [Jigsaw]
 jigsaw tiles = completedPuzzles
   where
     distinctEdges = globallyDistinctEdges tiles
@@ -137,11 +143,43 @@ jigsaw tiles = completedPuzzles
            , Set.insert (getId candidate) visited )
     completedPuzzles = map (\(m, _, _) -> m) . iterateUntilM isComplete selectPiece $ searchStart
 
+extractImage :: Jigsaw -> Image
+extractImage _ = Image pixels width height
+  where
+    pixels = []
+    width = 0
+    height = 0
+
+numSeaMonsters :: Image -> Int
+numSeaMonsters _ = 0
+
+numBlackPixels :: Image -> Int
+numBlackPixels _ = 0
+
+monsterImage :: Image
+monsterImage = Image pixels width height
+  where
+    pixels = map (fromBits . toBits) tiles
+    toBits = map (== '#')
+    width = length . head $ tiles
+    height = length tiles
+    tiles = [ "..................#."
+            , "#....##....##....###"
+            , ".#..#..#..#..#..#..." ]
+
+waterRoughness :: [Tile] -> Int
+waterRoughness tiles = roughness
+  where
+    solutions = jigsaw tiles
+    images = map extractImage solutions
+    totalMonsters = sum . map numSeaMonsters $ images
+    roughness = numBlackPixels (head images) - totalMonsters * numBlackPixels monsterImage
+
 printResults :: [Tile] -> PuzzleAnswerPair
 printResults tiles = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . product . map getId . corners $ tiles
-    part2 = show . length . jigsaw $ tiles
+    part2 = show . waterRoughness $ tiles
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = parse inputParser printResults <$> getProblemInputAsText 20
