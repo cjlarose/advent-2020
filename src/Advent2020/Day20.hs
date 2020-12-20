@@ -29,7 +29,8 @@ data Edges = Edges { getTop :: Edge
                    } deriving (Show, Ord, Eq)
 type TileId = Integer
 data Tile = Tile { getId :: TileId
-                 , getEdges :: Edges } deriving (Show, Ord, Eq)
+                 , getEdges :: Edges
+                 , getCenter :: [String] } deriving (Show, Ord, Eq)
 type Jigsaw = Map (Int, Int) Tile
 data Image = Image { getPixels :: [Integer]
                    , getWidth :: Int
@@ -39,10 +40,11 @@ data Image = Image { getPixels :: [Integer]
 inputParser :: Parser [Tile]
 inputParser = some tile <* eof
   where
-    tile = Tile <$> (symbol "Tile" *> decimal) <* symbol ":" <*> edges
+    tile = Tile <$> (symbol "Tile" *> decimal) <* symbol ":" <*> lookAhead edges <*> center
     edges = (\(t, b) (l, r) -> Edges t b l r) <$> lookAhead topAndBottom <*> leftAndRight
     topAndBottom = (,) <$> row <* count 8 row <*> row
     leftAndRight = foldr ((\(l, r) (ls, rs) -> (l:ls, r:rs)) . (\xs -> (head xs, last xs))) ([], []) <$> count 10 row
+    center = row *> count 8 (take 8 . drop 1 <$> row) <* row
     row = count 10 (token pixel)
     pixel = char '.' <|> char '#'
 
