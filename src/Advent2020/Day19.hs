@@ -38,7 +38,8 @@ parserForDeterministicCFG (Productions rules) = (ruleMap', startRule)
     toParser :: Replacement -> IntMap (Parser String) -> Parser String
     toParser (Terminal c) _ = pure <$> char c
     toParser (Alternatives options) m = choice . map (try . parserForNonterminalSequence m) $ options
-    parserForNonterminalSequence m = foldr (\x acc -> (m ! x) <* acc) (pure "")
+    parserForNonterminalSequence :: IntMap (Parser String) -> [Int] -> Parser String
+    parserForNonterminalSequence m = foldr ((\p acc -> (++) <$> p <*> acc) . (m !)) (pure "")
     ruleMap' = IntMap.map (\v -> v ruleMap') ruleMap
     startRule = try (Valid <$> ((ruleMap' ! 0) <* eol)) <|> (Invalid <$> (word <* eol))
 
