@@ -56,8 +56,8 @@ numOccurencesOfInertIngredients foods = totalOccurences
   where
     knownDangerousIngredients = Set.fromList . Map.elems . ingredientsByAllergen $ foods
     allIngredients = Set.unions . map getIngredients $ foods
-    nonAllergenIngredients = allIngredients \\ knownDangerousIngredients
-    totalOccurences = sum . map (Set.size . Set.intersection nonAllergenIngredients . getIngredients) $ foods
+    inertIngredients = allIngredients \\ knownDangerousIngredients
+    totalOccurences = sum . map (Set.size . Set.intersection inertIngredients . getIngredients) $ foods
 
 knownDangerousIngredientsSortedByAllergen :: [Food] -> [Ingredient]
 knownDangerousIngredientsSortedByAllergen = map snd . Map.toList . ingredientsByAllergen
