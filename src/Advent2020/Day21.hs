@@ -54,19 +54,19 @@ ingredientsByAllergen foods = finalAssignments
 numOccurencesOfInertIngredients :: [Food] -> Int
 numOccurencesOfInertIngredients foods = totalOccurences
   where
-    knownBadIngredients = Set.fromList . Map.elems . ingredientsByAllergen $ foods
+    knownDangerousIngredients = Set.fromList . Map.elems . ingredientsByAllergen $ foods
     allIngredients = Set.unions . map getIngredients $ foods
-    nonAllergenIngredients = allIngredients \\ knownBadIngredients
+    nonAllergenIngredients = allIngredients \\ knownDangerousIngredients
     totalOccurences = sum . map (Set.size . Set.intersection nonAllergenIngredients . getIngredients) $ foods
 
-knownBadIngredientsSortedByAllergen :: [Food] -> [Ingredient]
-knownBadIngredientsSortedByAllergen = map snd . Map.toList . ingredientsByAllergen
+knownDangerousIngredientsSortedByAllergen :: [Food] -> [Ingredient]
+knownDangerousIngredientsSortedByAllergen = map snd . Map.toList . ingredientsByAllergen
 
 printResults :: [Food] -> PuzzleAnswerPair
 printResults foods = PuzzleAnswerPair (part1, part2)
   where
     part1 = show . numOccurencesOfInertIngredients $ foods
-    part2 = intercalate "," . map (\(Ingredient x) -> x) . knownBadIngredientsSortedByAllergen $ foods
+    part2 = intercalate "," . map (\(Ingredient x) -> x) . knownDangerousIngredientsSortedByAllergen $ foods
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = parse inputParser printResults <$> getProblemInputAsText 21
