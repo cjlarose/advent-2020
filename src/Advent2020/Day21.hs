@@ -23,6 +23,7 @@ data Food = Food { getIngredients :: Set Ingredient
                  , getKnownAllergens :: Set Allergen
                  } deriving Show
 type CandidateMap = Map Allergen (Set Ingredient)
+type KnownAllergenMap = Map Allergen Ingredient
 
 inputParser :: Parser [Food]
 inputParser = some food <* eof
@@ -74,8 +75,8 @@ inputParser = some food <* eof
 -- fvjkl has soy
 --
 
-numOccurencesOfNonAllergenIngredients :: [Food] -> (Int, [Ingredient])
-numOccurencesOfNonAllergenIngredients foods = (totalOccurences, knownBadIngredientsSortedByAllergen)
+ingredientsByAllergen :: [Food] -> KnownAllergenMap
+ingredientsByAllergen foods = finalAssignments
   where
     insertFood :: Food -> CandidateMap -> CandidateMap
     insertFood Food{getIngredients=ingredients,getKnownAllergens=allergens} m
@@ -83,25 +84,30 @@ numOccurencesOfNonAllergenIngredients foods = (totalOccurences, knownBadIngredie
     candidatesForAllergens :: CandidateMap
     candidatesForAllergens = foldr insertFood Map.empty foods
     allAssigned = all Set.null . Map.elems . snd
-    findNakedSingle :: (Map Allergen Ingredient, CandidateMap) -> (Map Allergen Ingredient, CandidateMap)
+    findNakedSingle :: (KnownAllergenMap, CandidateMap) -> (KnownAllergenMap, CandidateMap)
     findNakedSingle (known, m) = let (allergen, candidates) = Map.findMin . Map.filter ((== 1) . Set.size) $ m
                                      ingredient = Set.findMin candidates
                                      newM = Map.map (Set.delete ingredient) m
                                      newKnown = Map.insert allergen ingredient known
                                  in (newKnown, newM)
     (finalAssignments, _) = until allAssigned findNakedSingle (Map.empty, candidatesForAllergens)
-    knownBadIngredients = Set.fromList . Map.elems $ finalAssignments
+
+numOccurencesOfNonAllergenIngredients :: [Food] -> Int
+numOccurencesOfNonAllergenIngredients foods = totalOccurences
+  where
+    knownBadIngredients = Set.fromList . Map.elems . ingredientsByAllergen $ foods
     allIngredients = Set.unions . map getIngredients $ foods
     nonAllergenIngredients = allIngredients \\ knownBadIngredients
     totalOccurences = sum . map (Set.size . Set.intersection nonAllergenIngredients . getIngredients) $ foods
-    knownBadIngredientsSortedByAllergen = map snd . Map.toList $ finalAssignments
+
+knownBadIngredientsSortedByAllergen :: [Food] -> [Ingredient]
+knownBadIngredientsSortedByAllergen = map snd . Map.toList . ingredientsByAllergen
 
 printResults :: [Food] -> PuzzleAnswerPair
 printResults foods = PuzzleAnswerPair (part1, part2)
   where
-    (occurences, knownDangerous) = numOccurencesOfNonAllergenIngredients foods
-    part1 = show occurences
-    part2 = intercalate "," . map (\(Ingredient x) -> x) $ knownDangerous
+    part1 = show . numOccurencesOfNonAllergenIngredients $ foods
+    part2 = intercalate "," . map (\(Ingredient x) -> x) . knownBadIngredientsSortedByAllergen $ foods
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = parse inputParser printResults <$> getProblemInputAsText 21
