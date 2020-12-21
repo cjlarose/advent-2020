@@ -4,6 +4,7 @@ module Advent2020.Day21
   ( solve
   ) where
 
+import Data.List (intercalate)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map)
 import qualified Data.Set as Set
@@ -73,8 +74,8 @@ inputParser = some food <* eof
 -- fvjkl has soy
 --
 
-numOccurencesOfNonAllergenIngredients :: [Food] -> Int
-numOccurencesOfNonAllergenIngredients foods = totalOccurences
+numOccurencesOfNonAllergenIngredients :: [Food] -> (Int, [Ingredient])
+numOccurencesOfNonAllergenIngredients foods = (totalOccurences, knownBadIngredientsSortedByAllergen)
   where
     insertFood :: Food -> CandidateMap -> CandidateMap
     insertFood Food{getIngredients=ingredients,getKnownAllergens=allergens} m
@@ -93,12 +94,14 @@ numOccurencesOfNonAllergenIngredients foods = totalOccurences
     allIngredients = Set.unions . map getIngredients $ foods
     nonAllergenIngredients = allIngredients \\ knownBadIngredients
     totalOccurences = sum . map (Set.size . Set.intersection nonAllergenIngredients . getIngredients) $ foods
+    knownBadIngredientsSortedByAllergen = map snd . Map.toList $ finalAssignments
 
 printResults :: [Food] -> PuzzleAnswerPair
 printResults foods = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . numOccurencesOfNonAllergenIngredients $ foods
-    part2 = "not implemented"
+    (occurences, knownDangerous) = numOccurencesOfNonAllergenIngredients foods
+    part1 = show occurences
+    part2 = intercalate "," . map (\(Ingredient x) -> x) $ knownDangerous
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = parse inputParser printResults <$> getProblemInputAsText 21
