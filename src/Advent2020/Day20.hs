@@ -5,6 +5,7 @@ module Advent2020.Day20
   ) where
 
 import Debug.Trace (traceShow)
+import Data.List (intersperse)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map, (!))
 import qualified Data.Set as Set
@@ -63,22 +64,54 @@ corners tiles = filter isCorner tiles
     isCorner t = Set.size (edgeIdsForTile ! t \\ Set.unions (Map.delete t edgeIdsForTile)) == 4
 
 rotateRight :: Tile -> Tile
-rotateRight t@Tile{getEdges=Edges{getTop=top,getBottom=bottom,getLeft=left,getRight=right}}
-  = t{getEdges=Edges newTop newBottom newLeft newRight}
+rotateRight t@Tile{getEdges=Edges{getTop=top,getBottom=bottom,getLeft=left,getRight=right},getCenter=center}
+  = t{getEdges=Edges newTop newBottom newLeft newRight,getCenter=newCenter}
   where
     newTop = reverse left
     newBottom = reverse right
     newLeft = bottom
     newRight = top
+    n = length center
+    m = length . head $ center
+    newCenter = map (\i -> map (\j -> center !! (n - 1 - j) !! i) [0..m-1]) [0..n-1]
+
+-- (0, 0) ... (0, m - 1)
+-- .
+-- .
+-- .
+-- (n - 1, 0) .... (n - 1, m - 1)
+-- 
+-- to:
+-- (n - 1, 0) ... (0, 0)
+-- .
+-- .
+-- .
+-- (n - 1, m - 1) .... (0, m -1)
 
 flipV :: Tile -> Tile
-flipV t@Tile{getEdges=Edges{getTop=top,getBottom=bottom,getLeft=left,getRight=right}}
-  = t{getEdges=Edges newTop newBottom newLeft newRight}
+flipV t@Tile{getEdges=Edges{getTop=top,getBottom=bottom,getLeft=left,getRight=right},getCenter=center}
+  = t{getEdges=Edges newTop newBottom newLeft newRight,getCenter=newCenter}
   where
     newTop = bottom
     newBottom = top
     newLeft = reverse left
     newRight = reverse right
+    n = length center
+    m = length . head $ center
+    newCenter = map (\i -> map (\j -> center !! (n - 1 - i) !! j) [0..m-1]) [0..n-1]
+
+-- (0, 0) ... (0, m - 1)
+-- .
+-- .
+-- .
+-- (n - 1, 0) .... (n - 1, m - 1)
+-- 
+-- to:
+-- (n - 1, 0) .... (n - 1, m - 1)
+-- .
+-- .
+-- .
+-- (0, 0) ... (0, m - 1)
 
 topEdge = getTop . getEdges
 leftEdge = getLeft . getEdges
@@ -147,7 +180,7 @@ jigsaw tiles = completedPuzzles
     completedPuzzles = map (\(m, _, _) -> m) . iterateUntilM isComplete selectPiece $ searchStart
 
 extractImage :: Jigsaw -> Image
-extractImage puzzle = Image pixels width height
+extractImage puzzle = Image pixels width (traceShow ("tiles in row", map getId . tilesInRow $ 0, "grid", gridForTileRow 0) height)
   where
     tilesInRow i = map (\j -> puzzle ! (i, j)) [0..11]
     toBits = map (== '#')
@@ -196,7 +229,14 @@ showImage :: Image -> String
 showImage Image{getPixels=pixels,getWidth=w} = unlines rows
   where
     rows = map showRow pixels
-    showRow x = map (\j -> if testBit x j then '#' else '.') [0..w-1]
+    showRow x = map (\j -> if testBit x (w - 1 - j) then '#' else '.') [0..w-1]
+
+showJigsaw :: Jigsaw -> String
+showJigsaw puzzle = unlines rows
+  where
+    rows = map showRow [0..11]
+    tilesInRow i = map (\j -> puzzle ! (i, j)) [0..11]
+    showRow = unwords . map (show . getId) . tilesInRow
 
 waterRoughness :: [Tile] -> Int
 waterRoughness tiles = traceShow ( "black pixels", numBlackPixels (head images)
@@ -222,8 +262,12 @@ solve = do
   input <- getProblemInputAsText 20
   case parse inputParser "" input of
     Right tiles -> do
-      putStrLn . showImage . extractImage . head . jigsaw $ tiles
-      forM_ (allCrops (getWidth monsterImage) (getHeight monsterImage) (extractImage . head . jigsaw $ tiles)) (putStrLn . showImage)
+      forM_ (jigsaw tiles) $ \puzzle -> do
+        putStrLn . showImage . extractImage $ puzzle
+        putStrLn . showJigsaw $ puzzle
+      -- forM_ (allCrops (getWidth monsterImage) (getHeight monsterImage) (extractImage . head . jigsaw $ tiles)) (putStrLn . showImage)
+      -- putStrLn . unlines . getCenter . (\j -> j ! (0, 0)) . head . jigsaw $ tiles
+      -- forM_ (jigsaw tiles) (putStrLn . showJigsaw)
       let part1 = show . product . map getId . corners $ tiles
       let part2 = show . waterRoughness $ tiles
       pure . Right . PuzzleAnswerPair $ (part1, part2)
