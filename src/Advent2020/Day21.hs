@@ -51,8 +51,8 @@ ingredientsByAllergen foods = finalAssignments
                                  in (newKnown, newM)
     (finalAssignments, _) = until allAssigned findNakedSingle (Map.empty, candidatesForAllergens)
 
-numOccurencesOfNonAllergenIngredients :: [Food] -> Int
-numOccurencesOfNonAllergenIngredients foods = totalOccurences
+numOccurencesOfInertIngredients :: [Food] -> Int
+numOccurencesOfInertIngredients foods = totalOccurences
   where
     knownBadIngredients = Set.fromList . Map.elems . ingredientsByAllergen $ foods
     allIngredients = Set.unions . map getIngredients $ foods
@@ -65,7 +65,7 @@ knownBadIngredientsSortedByAllergen = map snd . Map.toList . ingredientsByAllerg
 printResults :: [Food] -> PuzzleAnswerPair
 printResults foods = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . numOccurencesOfNonAllergenIngredients $ foods
+    part1 = show . numOccurencesOfInertIngredients $ foods
     part2 = intercalate "," . map (\(Ingredient x) -> x) . knownBadIngredientsSortedByAllergen $ foods
 
 solve :: IO (Either String PuzzleAnswerPair)
