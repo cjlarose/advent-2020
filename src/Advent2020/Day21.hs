@@ -34,47 +34,6 @@ inputParser = some food <* eof
     lowerWord = some lowerChar 
     allergens = symbol "contains" *> sepBy1 allergen (symbol ",")
 
--- mxmxvkd kfcds sqjhc nhms (contains dairy, fish)
--- trh fvjkl sbzzf mxmxvkd (contains dairy)
--- sqjhc fvjkl (contains soy)
--- sqjhc mxmxvkd sbzzf (contains fish)
---
--- allergen => candidates
---
--- after reading first
--- diary => mxmxvkd kfcds sqjhc nhms 
--- fish => mxmxvkd kfcds sqjhc nhms 
---
--- second
--- diary => mxmxvkd
--- fish => mxmxvkd kfcds sqjhc nhms 
---
--- third
--- diary => mxmxvkd
--- fish => mxmxvkd kfcds sqjhc nhms 
--- soy => sqjhc fvjkl
---
--- fourth
--- diary => mxmxvkd
--- fish => mxmxvkd sqjhc
--- soy => sqjhc fvjkl
---
--- naked single
--- mxmxvkd has dairy
--- fish => sqjhc
--- soy => sqjhc fvjkl
---
--- naked single
--- mxmxvkd has dairy
--- sqjhc has fish
--- soy => fvjkl
---
--- naked single
--- mxmxvkd has dairy
--- sqjhc has fish
--- fvjkl has soy
---
-
 ingredientsByAllergen :: [Food] -> KnownAllergenMap
 ingredientsByAllergen foods = finalAssignments
   where
