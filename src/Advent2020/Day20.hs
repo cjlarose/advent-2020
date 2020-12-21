@@ -4,22 +4,20 @@ module Advent2020.Day20
   ( solve
   ) where
 
-import Debug.Trace (traceShow)
-import Data.List (intersperse)
 import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map, (!))
 import qualified Data.Set as Set
 import Data.Set (Set, (\\))
-import Data.Bits ((.&.), shiftL, shiftR, popCount, testBit)
-import Control.Monad (guard, forM_)
+import Data.Bits ((.&.), shiftL, shiftR, popCount)
+import Control.Monad (guard)
 import Control.Monad.Loops (iterateUntilM)
-import Text.Megaparsec ((<|>), lookAhead, eof, some, parse)
+import Text.Megaparsec ((<|>), lookAhead, eof, some)
 import Text.Megaparsec.Char (char)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Control.Monad.Combinators (count)
 
 import Advent.Input (getProblemInputAsText)
-import Advent.Parse (Parser, token, symbol)
+import Advent.Parse (Parser, parse, token, symbol)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.BitUtils (fromBits)
 
@@ -75,19 +73,6 @@ rotateRight t@Tile{getEdges=Edges{getTop=top,getBottom=bottom,getLeft=left,getRi
     m = length . head $ center
     newCenter = map (\i -> map (\j -> center !! (n - 1 - j) !! i) [0..m-1]) [0..n-1]
 
--- (0, 0) ... (0, m - 1)
--- .
--- .
--- .
--- (n - 1, 0) .... (n - 1, m - 1)
--- 
--- to:
--- (n - 1, 0) ... (0, 0)
--- .
--- .
--- .
--- (n - 1, m - 1) .... (0, m -1)
-
 flipV :: Tile -> Tile
 flipV t@Tile{getEdges=Edges{getTop=top,getBottom=bottom,getLeft=left,getRight=right},getCenter=center}
   = t{getEdges=Edges newTop newBottom newLeft newRight,getCenter=newCenter}
@@ -99,19 +84,6 @@ flipV t@Tile{getEdges=Edges{getTop=top,getBottom=bottom,getLeft=left,getRight=ri
     n = length center
     m = length . head $ center
     newCenter = map (\i -> map (\j -> center !! (n - 1 - i) !! j) [0..m-1]) [0..n-1]
-
--- (0, 0) ... (0, m - 1)
--- .
--- .
--- .
--- (n - 1, 0) .... (n - 1, m - 1)
--- 
--- to:
--- (n - 1, 0) .... (n - 1, m - 1)
--- .
--- .
--- .
--- (0, 0) ... (0, m - 1)
 
 topEdge = getTop . getEdges
 leftEdge = getLeft . getEdges
@@ -158,10 +130,8 @@ jigsaw tiles = completedPuzzles
       -- if in right column, right edge must be distinct
       let candidates = do tile <- everyTileInEveryOrientation
                           guard . not . Set.member (getId tile) $ visited
-                          -- let leftNeighbor = puzzle ! (traceShow ("leftNeighbor", (i, j - 1)) (i, j - 1))
                           let leftNeighbor = puzzle ! (i, j - 1)
                           guard . implies (j > 0) . (leftEdge tile == ) . rightEdge $ leftNeighbor
-                          -- let topNeighbor = puzzle ! (traceShow ("topNeighbor", (i - 1, j)) (i - 1, j))
                           let topNeighbor = puzzle ! (i - 1, j)
                           guard . implies (i > 0) . (topEdge tile == ) . bottomEdge $ topNeighbor
                           guard . implies (i == 0) . globallyDistinctEdge . topEdge $ tile
@@ -169,7 +139,6 @@ jigsaw tiles = completedPuzzles
                           guard . implies (j == 0) . globallyDistinctEdge . leftEdge $ tile
                           guard . implies (j == 11) . globallyDistinctEdge . rightEdge $ tile
                           pure tile
-      -- candidate <- traceShow ("candidates for", coord, length candidates, candidates) (traceShow ("coord", coord) candidates)
       candidate <- candidates
       let neighbors = do (i, j) <- [(i + 1, j), (i, j + 1)]
                          guard $ i < 12 && j < 12
@@ -180,7 +149,7 @@ jigsaw tiles = completedPuzzles
     completedPuzzles = map (\(m, _, _) -> m) . iterateUntilM isComplete selectPiece $ searchStart
 
 extractImage :: Jigsaw -> Image
-extractImage puzzle = Image pixels width (traceShow ("tiles in row", map getId . tilesInRow $ 0, "grid", gridForTileRow 0) height)
+extractImage puzzle = Image pixels width height
   where
     tilesInRow i = map (\j -> puzzle ! (i, j)) [0..11]
     toBits = map (== '#')
@@ -194,7 +163,7 @@ allCrops :: Int -> Int -> Image -> [Image]
 allCrops w h source = do
   i <- [0..getHeight source - h]
   j <- [0..getWidth source - w]
-  let rows = take h . drop i . getPixels $ traceShow ("source w", getWidth source, "source h", getHeight source) source
+  let rows = take h . drop i . getPixels $ source
   let mask = (1 `shiftL` w) - 1
   let cropPixels = map (\row -> (row `shiftR` fromIntegral (getWidth source - j - w)) .&. mask) rows
   pure $ Image cropPixels w h
@@ -206,10 +175,10 @@ imageContainsMonster source = and $ zipWith hasMatchInRow (getPixels source) (ge
     hasMatchInRow a b = a .&. b == b
 
 numSeaMonsters :: Image -> Int
-numSeaMonsters image = length . filter imageContainsMonster $ traceShow ("length crops", length crops) crops
+numSeaMonsters image = length . filter imageContainsMonster $ crops
   where
     crops = allCrops w h image
-    Image{getWidth=w,getHeight=h} = monsterImage -- traceShow ("num crops", length (allCrops w h image)) monsterImage
+    Image{getWidth=w,getHeight=h} = monsterImage
 
 numBlackPixels :: Image -> Int
 numBlackPixels = sum . map popCount . getPixels
@@ -225,24 +194,21 @@ monsterImage = Image pixels width height
             , "#....##....##....###"
             , ".#..#..#..#..#..#..." ]
 
-showImage :: Image -> String
-showImage Image{getPixels=pixels,getWidth=w} = unlines rows
-  where
-    rows = map showRow pixels
-    showRow x = map (\j -> if testBit x (w - 1 - j) then '#' else '.') [0..w-1]
+-- showImage :: Image -> String
+-- showImage Image{getPixels=pixels,getWidth=w} = unlines rows
+--   where
+--     rows = map showRow pixels
+--     showRow x = map (\j -> if testBit x (w - 1 - j) then '#' else '.') [0..w-1]
 
-showJigsaw :: Jigsaw -> String
-showJigsaw puzzle = unlines rows
-  where
-    rows = map showRow [0..11]
-    tilesInRow i = map (\j -> puzzle ! (i, j)) [0..11]
-    showRow = unwords . map (show . getId) . tilesInRow
+-- showJigsaw :: Jigsaw -> String
+-- showJigsaw puzzle = unlines rows
+--   where
+--     rows = map showRow [0..11]
+--     tilesInRow i = map (\j -> puzzle ! (i, j)) [0..11]
+--     showRow = unwords . map (show . getId) . tilesInRow
 
 waterRoughness :: [Tile] -> Int
-waterRoughness tiles = traceShow ( "black pixels", numBlackPixels (head images)
-                                 , "total monsters", totalMonsters
-                                 , "monsters in each image", map numSeaMonsters images
-                                 , "black pixels in monster", numBlackPixels monsterImage) roughness
+waterRoughness tiles = roughness
   where
     solutions = jigsaw tiles
     images = map extractImage solutions
@@ -256,18 +222,4 @@ printResults tiles = PuzzleAnswerPair (part1, part2)
     part2 = show . waterRoughness $ tiles
 
 solve :: IO (Either String PuzzleAnswerPair)
--- solve = parse inputParser printResults <$> getProblemInputAsText 20
-
-solve = do
-  input <- getProblemInputAsText 20
-  case parse inputParser "" input of
-    Right tiles -> do
-      forM_ (jigsaw tiles) $ \puzzle -> do
-        putStrLn . showImage . extractImage $ puzzle
-        putStrLn . showJigsaw $ puzzle
-      -- forM_ (allCrops (getWidth monsterImage) (getHeight monsterImage) (extractImage . head . jigsaw $ tiles)) (putStrLn . showImage)
-      -- putStrLn . unlines . getCenter . (\j -> j ! (0, 0)) . head . jigsaw $ tiles
-      -- forM_ (jigsaw tiles) (putStrLn . showJigsaw)
-      let part1 = show . product . map getId . corners $ tiles
-      let part2 = show . waterRoughness $ tiles
-      pure . Right . PuzzleAnswerPair $ (part1, part2)
+solve = parse inputParser printResults <$> getProblemInputAsText 20
