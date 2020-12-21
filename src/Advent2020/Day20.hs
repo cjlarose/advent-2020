@@ -9,15 +9,16 @@ import qualified Data.Map.Strict as Map
 import Data.Map.Strict (Map, (!))
 import qualified Data.Set as Set
 import Data.Set (Set, (\\))
-import Control.Monad (guard)
+import Data.Bits ((.&.), shiftL, shiftR, popCount, testBit)
+import Control.Monad (guard, forM_)
 import Control.Monad.Loops (iterateUntilM)
-import Text.Megaparsec ((<|>), lookAhead, eof, some)
+import Text.Megaparsec ((<|>), lookAhead, eof, some, parse)
 import Text.Megaparsec.Char (char)
 import Text.Megaparsec.Char.Lexer (decimal)
 import Control.Monad.Combinators (count)
 
 import Advent.Input (getProblemInputAsText)
-import Advent.Parse (Parser, parse, token, symbol)
+import Advent.Parse (Parser, token, symbol)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 import Advent.BitUtils (fromBits)
 
@@ -150,15 +151,35 @@ extractImage puzzle = Image pixels width height
   where
     tilesInRow i = map (\j -> puzzle ! (i, j)) [0..11]
     toBits = map (== '#')
-    pixels = concatMap (map (fromBits . toBits)) . foldr (\i -> zipWith (++) (map getCenter . tilesInRow $ i)) (replicate 8 []) $ [0..11]
-    width = 12 * 8
-    height = 12 * 8
+    gridForTileRow i = foldr (zipWith (++) . getCenter) (replicate 8 "") . tilesInRow $ i
+    grid = concatMap gridForTileRow [0..11]
+    pixels = map (fromBits . toBits) grid
+    width = height
+    height = length pixels
+
+allCrops :: Int -> Int -> Image -> [Image]
+allCrops w h source = do
+  i <- [0..getHeight source - h]
+  j <- [0..getWidth source - w]
+  let rows = take h . drop i . getPixels $ traceShow ("source w", getWidth source, "source h", getHeight source) source
+  let mask = (1 `shiftL` w) - 1
+  let cropPixels = map (\row -> (row `shiftR` fromIntegral (getWidth source - j - w)) .&. mask) rows
+  pure $ Image cropPixels w h
+
+imageContainsMonster :: Image -> Bool
+imageContainsMonster source = and $ zipWith hasMatchInRow (getPixels source) (getPixels monsterImage)
+  where
+    hasMatchInRow :: Integer -> Integer -> Bool
+    hasMatchInRow a b = a .&. b == b
 
 numSeaMonsters :: Image -> Int
-numSeaMonsters _ = 0
+numSeaMonsters image = length . filter imageContainsMonster $ traceShow ("length crops", length crops) crops
+  where
+    crops = allCrops w h image
+    Image{getWidth=w,getHeight=h} = monsterImage -- traceShow ("num crops", length (allCrops w h image)) monsterImage
 
 numBlackPixels :: Image -> Int
-numBlackPixels _ = 0
+numBlackPixels = sum . map popCount . getPixels
 
 monsterImage :: Image
 monsterImage = Image pixels width height
@@ -171,13 +192,22 @@ monsterImage = Image pixels width height
             , "#....##....##....###"
             , ".#..#..#..#..#..#..." ]
 
+showImage :: Image -> String
+showImage Image{getPixels=pixels,getWidth=w} = unlines rows
+  where
+    rows = map showRow pixels
+    showRow x = map (\j -> if testBit x j then '#' else '.') [0..w-1]
+
 waterRoughness :: [Tile] -> Int
-waterRoughness tiles = roughness
+waterRoughness tiles = traceShow ( "black pixels", numBlackPixels (head images)
+                                 , "total monsters", totalMonsters
+                                 , "monsters in each image", map numSeaMonsters images
+                                 , "black pixels in monster", numBlackPixels monsterImage) roughness
   where
     solutions = jigsaw tiles
     images = map extractImage solutions
     totalMonsters = sum . map numSeaMonsters $ images
-    roughness = numBlackPixels (head images) - totalMonsters * numBlackPixels monsterImage
+    roughness = numBlackPixels (head images) - (totalMonsters * numBlackPixels monsterImage)
 
 printResults :: [Tile] -> PuzzleAnswerPair
 printResults tiles = PuzzleAnswerPair (part1, part2)
@@ -186,4 +216,14 @@ printResults tiles = PuzzleAnswerPair (part1, part2)
     part2 = show . waterRoughness $ tiles
 
 solve :: IO (Either String PuzzleAnswerPair)
-solve = parse inputParser printResults <$> getProblemInputAsText 20
+-- solve = parse inputParser printResults <$> getProblemInputAsText 20
+
+solve = do
+  input <- getProblemInputAsText 20
+  case parse inputParser "" input of
+    Right tiles -> do
+      putStrLn . showImage . extractImage . head . jigsaw $ tiles
+      forM_ (allCrops (getWidth monsterImage) (getHeight monsterImage) (extractImage . head . jigsaw $ tiles)) (putStrLn . showImage)
+      let part1 = show . product . map getId . corners $ tiles
+      let part2 = show . waterRoughness $ tiles
+      pure . Right . PuzzleAnswerPair $ (part1, part2)
