@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0f0e848e9a61acc570536f7c245bb15dff8d2b9e08e756620291f70f62ce747e
+-- hash: 7b10fad3c41db0f58e016b12e02164322aed73530d17cbb899e07a06911a0efc
 
 name:           advent2020
 version:        0.1.0.0
@@ -55,6 +55,7 @@ library
       Advent2020.Day20
       Advent2020.Day21
       Advent2020.Day22
+      Advent2020.Day23
       Advent2020.Solve
   other-modules:
       Paths_advent2020
