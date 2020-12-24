@@ -53,11 +53,21 @@ cupsAfterLabel1 circle = concatMap (show . (\(Cup x) -> x)) . toList $ rest
   where
     (_ :<| rest) = bringCupToFront (Cup 1) circle
 
+extendToCupLabelled1Million :: CupCircle -> CupCircle
+extendToCupLabelled1Million circle = circle >< (Seq.fromList . map Cup $ [maxValue + 1..1000000])
+  where
+    (Cup maxValue) = maximum circle
+
+productOfTwoCupsAfter1 :: CupCircle -> Int
+productOfTwoCupsAfter1 circle = a * b
+  where
+    (_ :<| (Cup a) :<| (Cup b) :<| _) = bringCupToFront (Cup 1) circle
+
 printResults :: CupCircle -> PuzzleAnswerPair
 printResults circle = PuzzleAnswerPair (part1, part2)
   where
     part1 = cupsAfterLabel1 . simulateRounds 100 $ circle
-    part2 = "not implemented"
+    part2 = show . productOfTwoCupsAfter1 . simulateRounds 10000000 . extendToCupLabelled1Million $ circle
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = parse inputParser printResults <$> getProblemInputAsText 23
