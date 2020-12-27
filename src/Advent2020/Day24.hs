@@ -57,17 +57,15 @@ neighbors :: Vec -> Set Vec
 neighbors coord = Set.fromList . map (vecAdd coord . toDisplacementVector) $ [E, SE, SW, W, NW, NE]
 
 simulateDays :: Int -> Set Vec -> Set Vec
-simulateDays = go
-  where
-    go i blackTiles
-      | i == 0 = blackTiles
-      | otherwise = let flipsToWhite coord = (\x -> x == 0 || x > 2) . Set.size . Set.intersection blackTiles . neighbors $ coord
-                        flippedToWhite = Set.filter flipsToWhite blackTiles
-                        candidateWhiteTiles = Set.unions (Set.map neighbors blackTiles) \\ blackTiles
-                        turnsBlack coord = (== 2) . Set.size . Set.intersection blackTiles . neighbors $ coord
-                        newlyBlackTiles = Set.filter turnsBlack candidateWhiteTiles
-                        newBlackTiles = Set.union (blackTiles \\ flippedToWhite) newlyBlackTiles
-                    in go (i - 1) newBlackTiles
+simulateDays 0 blackTiles = blackTiles
+simulateDays i blackTiles =
+  let flipsToWhite coord = (\x -> x == 0 || x > 2) . Set.size . Set.intersection blackTiles . neighbors $ coord
+      flippedToWhite = Set.filter flipsToWhite blackTiles
+      candidateWhiteTiles = Set.unions (Set.map neighbors blackTiles) \\ blackTiles
+      turnsBlack coord = (== 2) . Set.size . Set.intersection blackTiles . neighbors $ coord
+      newlyBlackTiles = Set.filter turnsBlack candidateWhiteTiles
+      newBlackTiles = Set.union (blackTiles \\ flippedToWhite) newlyBlackTiles
+  in simulateDays (i - 1) newBlackTiles
 
 printResults :: [Path] -> PuzzleAnswerPair
 printResults paths = PuzzleAnswerPair (part1, part2)
