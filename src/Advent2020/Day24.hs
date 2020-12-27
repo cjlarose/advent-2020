@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE BangPatterns #-}
 
 module Advent2020.Day24
   ( solve
   ) where
 
 import qualified Data.Set as Set
-import Data.Set (Set)
+import Data.Set (Set, (\\))
 import Text.Megaparsec (some, eof, try)
 import Text.Megaparsec.Char (string)
 import Control.Monad.Combinators (choice)
@@ -39,8 +40,11 @@ inputParser = some path <* eof
                                    ]
     dir f s = f <$ string s
 
+vecAdd :: Vec -> Vec -> Vec
+vecAdd (i, j, k) (i', j', k') = (i + i', j + j', k + k')
+
 toCoord :: Path -> Vec
-toCoord = foldr ((\(di, dj, dk) (i, j, k) -> (i + di, j + dj, k + dk)) . toDisplacementVector) (0, 0, 0)
+toCoord = foldr (vecAdd . toDisplacementVector) (0, 0, 0)
 
 blackTiles :: [Path] -> Set Vec
 blackTiles = foldr (f . toCoord) Set.empty
@@ -49,11 +53,28 @@ blackTiles = foldr (f . toCoord) Set.empty
                   then Set.delete coord acc
                   else Set.insert coord acc
 
+neighbors :: Vec -> Set Vec
+neighbors coord = Set.fromList . map (vecAdd coord . toDisplacementVector) $ [E, SE, SW, W, NW, NE]
+
+simulateDays :: Int -> Set Vec -> Set Vec
+simulateDays = go
+  where
+    go i blackTiles
+      | i == 0 = blackTiles
+      | otherwise = let flipsToWhite coord = (\x -> x == 0 || x > 2) . Set.size . Set.intersection blackTiles . neighbors $ coord
+                        flippedToWhite = Set.filter flipsToWhite blackTiles
+                        candidateWhiteTiles = Set.unions (Set.map neighbors blackTiles) \\ blackTiles
+                        turnsBlack coord = (== 2) . Set.size . Set.intersection blackTiles . neighbors $ coord
+                        newlyBlackTiles = Set.filter turnsBlack candidateWhiteTiles
+                        newBlackTiles = Set.union (blackTiles \\ flippedToWhite) newlyBlackTiles
+                    in go (i - 1) newBlackTiles
+
 printResults :: [Path] -> PuzzleAnswerPair
 printResults paths = PuzzleAnswerPair (part1, part2)
   where
-    part1 = show . Set.size . blackTiles $ paths
-    part2 = "not implemented"
+    initialBlackTiles = blackTiles paths
+    part1 = show . Set.size $ initialBlackTiles
+    part2 = show . Set.size . simulateDays 100 $ initialBlackTiles
 
 solve :: IO (Either String PuzzleAnswerPair)
 solve = parse inputParser printResults <$> getProblemInputAsText 24
