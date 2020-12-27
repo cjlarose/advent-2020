@@ -16,6 +16,12 @@ stack run 1
 stack test
 ```
 
+## Run tests for specific problem
+
+```sh
+stack test --ta '-p "Day 24"'
+```
+
 ## Download problem input
 
 Set the env var `ADVENT_SESSION_COOKIE` to your cookie for `adventofcode.com`. Then execute
