@@ -17,7 +17,7 @@ import Advent.Input (getProblemInputAsText)
 import Advent.Parse (Parser, parse, token)
 import Advent.PuzzleAnswerPair (PuzzleAnswerPair(..))
 
-type PublicKey = Natural
+type PublicKey = Mod 20201227
 
 inputParser :: Parser (PublicKey, PublicKey)
 inputParser = (,) <$> publicKey <*> publicKey <* eof
@@ -25,21 +25,18 @@ inputParser = (,) <$> publicKey <*> publicKey <* eof
     publicKey = token decimal
 
 -- | transformSubjectNumber subject loopSize = subject^loopSize mod p
-transformSubjectNumber :: Natural -> Natural -> Natural
+transformSubjectNumber :: Mod 20201227 -> Natural -> Natural
 transformSubjectNumber subject loopSize =
-  let base = fromInteger . toInteger $ subject :: Mod 20201227
-      exponent = loopSize
-      result = base ^% exponent
+  let result = subject ^% loopSize
   in getNatVal result
 
 -- | getLoopSize pk returns the least positive integer x such that 7^x = pk
 -- (mod 20201227)
 getLoopSize :: PublicKey -> Natural
 getLoopSize pk = fromJust $ do
-  let pkModP = fromInteger . toInteger $ pk :: Mod 20201227
   group <- cyclicGroup :: Maybe (CyclicGroup Integer 20201227)
   root <- isPrimitiveRoot group 7
-  x <- isMultElement pkModP
+  x <- isMultElement pk
   pure $ discreteLogarithm group root x
 
 encryptionKey :: (PublicKey, PublicKey) -> Natural
