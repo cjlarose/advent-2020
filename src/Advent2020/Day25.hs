@@ -26,9 +26,7 @@ inputParser = (,) <$> publicKey <*> publicKey <* eof
 
 -- | transformSubjectNumber subject loopSize = subject^loopSize mod p
 transformSubjectNumber :: Mod 20201227 -> Natural -> Natural
-transformSubjectNumber subject loopSize =
-  let result = subject ^% loopSize
-  in getNatVal result
+transformSubjectNumber subject loopSize = getNatVal $ subject ^% loopSize
 
 -- | getLoopSize pk returns the least positive integer x such that 7^x = pk
 -- (mod 20201227)
@@ -40,8 +38,7 @@ getLoopSize pk = fromJust $ do
   pure $ discreteLogarithm group root x
 
 encryptionKey :: (PublicKey, PublicKey) -> Natural
-encryptionKey (cardPk, doorPk) = let cardLoopSize = getLoopSize cardPk
-                                 in transformSubjectNumber doorPk cardLoopSize
+encryptionKey (cardPk, doorPk) = transformSubjectNumber doorPk . getLoopSize $ cardPk
 
 printResults :: (PublicKey, PublicKey) -> PuzzleAnswerPair
 printResults publicKeys = PuzzleAnswerPair (part1, part2)
